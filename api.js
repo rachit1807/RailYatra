@@ -23,7 +23,9 @@ class ApiError extends Error {
 const wrap = handler => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
 const digest = value => createHash('sha256').update(value).digest('hex');
 const userDto = user => ({id: user.id, name: user.name, email: user.email, role: user.role ?? 'traveller'});
-const dateText = value => String(value).slice(0, 10);
+const dateText = value => value instanceof Date
+  ? value.toISOString().slice(0, 10)
+  : String(value).slice(0, 10);
 
 function validJourneyDate(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
