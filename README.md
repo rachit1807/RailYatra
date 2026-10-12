@@ -10,7 +10,7 @@ Requires Node 18+; no dependencies or installation needed.
 npm run dev
 ```
 
-Open http://localhost:5173. Use **Explore with a demo account** or create a fictional account. The demo account includes one clearly marked past sample journey. Search among 37 major stations and 30 directional sample services. Searches return direct trains only. PDF and PNG exports are created locally with an embedded valid version 1-L QR encoding `DEMO:<PNR>`.
+Open http://localhost:5173. Use **Explore with a demo account** or create a fictional account. The demo account includes one clearly marked past sample journey. Search among 41 major stations and 30 directional sample services. Searches return direct trains only. PDF and PNG exports are created locally with an embedded valid version 1-L QR encoding `DEMO:<PNR>`. The appearance toggle follows your device preference initially and remembers your selection in this browser.
 
 ```
 npm test
