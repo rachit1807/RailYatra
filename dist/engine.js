@@ -38,35 +38,33 @@ async function localOrderFood(order){const db=await database();return new Promis
 
 const apiOrigin=()=>typeof window!=='undefined'?String(window.RY_API_BASE??'').replace(/\/$/,''):'';
 export const backendEnabled=()=>Boolean(apiOrigin());
-const accessToken=()=>typeof localStorage!=='undefined'?localStorage.getItem('ry-token'):null;
+if(typeof localStorage!=='undefined')localStorage.removeItem('ry-token');
 async function apiRequest(path,options={}){
-  const headers={Accept:'application/json',...(options.body?{'Content-Type':'application/json'}:{}),...options.headers};
-  const token=options.auth===false?null:accessToken();
-  if(token)headers.Authorization=`Bearer ${token}`;
+  const {auth:_auth,body,...fetchOptions}=options;
+  const method=String(options.method??'GET').toUpperCase();
+  const headers={Accept:'application/json',...(body?{'Content-Type':'application/json'}:{}),...(['POST','PUT','PATCH','DELETE'].includes(method)?{'X-RailYatra-Request':'1'}:{}),...(crypto.randomUUID?{'X-Request-ID':crypto.randomUUID()}:{}),...options.headers};
   let response;
-  try{response=await fetch(`${apiOrigin()}/api${path}`,{...options,headers,body:options.body?JSON.stringify(options.body):undefined});}
+  try{response=await fetch(`${apiOrigin()}/api${path}`,{...fetchOptions,method,headers,credentials:'include',body:body?JSON.stringify(body):undefined});}
   catch{throw Error('RailYatra server is unavailable. Check the backend connection and try again.');}
   if(response.status===204)return null;
   const payload=await response.json().catch(()=>({}));
-  if(!response.ok){const error=Error(payload.error??'RailYatra could not complete that request.');error.status=response.status;if(response.status===401)localStorage.removeItem('ry-token');throw error;}
+  if(!response.ok){const error=Error(payload.error??'RailYatra could not complete that request.');error.status=response.status;throw error;}
   return payload;
 }
-function saveToken(token){localStorage.setItem('ry-token',token);}
 export async function validateSession(){
-  if(!backendEnabled()||!accessToken())return null;
+  if(!backendEnabled())return null;
   try{return await apiRequest('/auth/me');}
   catch(error){if(error.status===401)return null;throw error;}
 }
 export async function all(store){
   if(!backendEnabled())return localAll(store);
   if(store==='users'){
-    if(!accessToken())return[];
     const current=await validateSession();
     return current?[current]:[];
   }
-  if(!accessToken())return[];
   if(store==='bookings')return apiRequest('/bookings');
   if(store==='orders')return apiRequest('/food-orders');
+  if(store==='transactions')return apiRequest('/transactions');
   return[];
 }
 export async function getAvailability(search){
@@ -77,22 +75,34 @@ export async function getAvailability(search){
 export async function register(name,email,password){
   if(!backendEnabled())return localRegister(name,email,password);
   const response=await apiRequest('/auth/register',{method:'POST',auth:false,body:{name,email,password}});
-  saveToken(response.token);
   return response.user;
 }
 export async function authenticate(email,password){
   if(!backendEnabled())return localAuthenticate(email,password);
   const response=await apiRequest('/auth/login',{method:'POST',auth:false,body:{email,password}});
-  saveToken(response.token);
   return response.user;
 }
 export async function logout(){
-  if(backendEnabled()&&accessToken())try{await apiRequest('/auth/logout',{method:'POST'});}catch{}
+  if(backendEnabled())try{await apiRequest('/auth/logout',{method:'POST'});}catch{}
   if(typeof localStorage!=='undefined')localStorage.removeItem('ry-token');
+}
+export async function createCheckout(draft){
+  if(!backendEnabled())return{status:'HELD',id:null,expiresAt:new Date(Date.now()+5*60_000).toISOString()};
+  const {checkoutKey,...body}=draft;
+  return apiRequest('/checkouts',{method:'POST',headers:{'Idempotency-Key':checkoutKey},body});
+}
+export async function completeCheckout(checkoutId,outcome){
+  if(!backendEnabled())throw Error('A shared checkout session is not available in browser-only mode.');
+  return apiRequest(`/checkouts/${encodeURIComponent(checkoutId)}/payment`,{method:'POST',body:{outcome}});
+}
+export async function releaseCheckout(checkoutId){
+  if(!backendEnabled()||!checkoutId)return null;
+  return apiRequest(`/checkouts/${encodeURIComponent(checkoutId)}/cancel`,{method:'POST'});
 }
 export async function reserve(draft){
   if(!backendEnabled())return localReserve(draft);
-  return apiRequest('/bookings',{method:'POST',body:{...draft,paymentOutcome:'SUCCESS'}});
+  const checkout=await createCheckout(draft);
+  return completeCheckout(checkout.id,'SUCCESS');
 }
 export async function cancel(pnr,email){
   if(!backendEnabled())return localCancel(pnr,email);

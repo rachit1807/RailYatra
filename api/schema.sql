@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
   email varchar(254) NOT NULL UNIQUE,
   password_salt text NOT NULL,
   password_hash text NOT NULL,
+  role text NOT NULL DEFAULT 'traveller' CHECK (role IN ('traveller', 'admin')),
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

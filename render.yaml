@@ -6,7 +6,7 @@ services:
     region: singapore
     buildCommand: npm ci
     startCommand: npm start
-    healthCheckPath: /api/health
+    healthCheckPath: /api/ready
     envVars:
       - key: NODE_ENV
         value: production
@@ -16,5 +16,7 @@ services:
         value: require
       - key: PG_POOL_SIZE
         value: "5"
+      - key: SEAT_HOLD_SECONDS
+        value: "300"
       - key: ALLOWED_ORIGINS
         value: https://rachit1807.github.io,http://localhost:5173,http://127.0.0.1:5173

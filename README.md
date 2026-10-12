@@ -6,10 +6,11 @@
 
 A portfolio project for exploring the railway booking experience: accounts, route search, seat selection, simulated checkout, PNR lookup and downloadable demo tickets.
 
-[**Open the live demo**](https://rachit1807.github.io/RailYatra/) · [API health](https://railyatra-api.onrender.com/api/health) · [Source code](https://github.com/rachit1807/RailYatra)
+[**Open the full-stack demo**](https://railyatra-api.onrender.com/) · [GitHub Pages mirror](https://rachit1807.github.io/RailYatra/) · [API readiness](https://railyatra-api.onrender.com/api/ready) · [Source code](https://github.com/rachit1807/RailYatra)
 
 [![Pages deployment](https://github.com/rachit1807/RailYatra/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/rachit1807/RailYatra/actions/workflows/deploy-pages.yml)
-[![API status](https://img.shields.io/website?url=https%3A%2F%2Frailyatra-api.onrender.com%2Fapi%2Fhealth&label=API&up_message=online&down_message=offline)](https://railyatra-api.onrender.com/api/health)
+[![Quality checks](https://github.com/rachit1807/RailYatra/actions/workflows/quality.yml/badge.svg)](https://github.com/rachit1807/RailYatra/actions/workflows/quality.yml)
+[![API status](https://img.shields.io/website?url=https%3A%2F%2Frailyatra-api.onrender.com%2Fapi%2Fready&label=API&up_message=online&down_message=offline)](https://railyatra-api.onrender.com/api/ready)
 ![Node.js](https://img.shields.io/badge/Node.js-18%2B-43853d?logo=nodedotjs&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169e1?logo=postgresql&logoColor=white)
@@ -20,7 +21,7 @@ A portfolio project for exploring the railway booking experience: accounts, rout
 
 ## Live preview
 
-[Open RailYatra](https://rachit1807.github.io/RailYatra/) and choose **Explore with a demo account** to try the current interface with fictional demo data. The diagrams below document the deployed architecture and the exact sample dataset.
+[Open the full-stack RailYatra demo](https://railyatra-api.onrender.com/) and choose **Explore with a demo account** to try the current interface with fictional demo data. The diagrams below document the deployed architecture and the exact sample dataset.
 
 ## Built with
 
@@ -50,7 +51,7 @@ A portfolio project for exploring the railway booking experience: accounts, rout
 
 - Create an account or use the in-app demo account; sign in and out.
 - Search sample routes across **41 major Indian stations**, compare **30 directional sample services**, and choose from **Sleeper, 3A, 2A and 1A**.
-- Select passengers and seats, then complete a **simulated** payment flow.
+- Select passengers and seats; a server-side hold lasts up to five minutes while you complete the **simulated** payment flow.
 - View a demo PNR and download the ticket as an image or PDF.
 - Check upcoming, past and cancelled journeys; inspect recent demo transactions and request a simulated cancellation/refund.
 - Explore a sample train-progress timeline, place a sample onboard meal order, and switch between light and dark themes.
@@ -67,15 +68,37 @@ These figures describe the curated sample data in the repository. They are not l
 
 The GitHub Pages build serves the static `dist/` frontend. When configured with the hosted API, the browser sends requests to the Express service on Render, which persists shared demo records in PostgreSQL on Neon. For local development, Docker Compose can run PostgreSQL on your machine.
 
-### Seat booking flow
+### Reservation and payment lifecycle
 
-1. Search and view sample train availability.
-2. Select a train, travel class, passengers and seats.
-3. The browser sends the request to the API; the API validates the route, class, quota, passenger data and fare.
-4. In a PostgreSQL transaction, the API locks the relevant seat inventory rows, rechecks overlapping route segments, and confirms the booking. This lets adjacent, non-overlapping journey segments reuse the same seat while blocking overlapping allocations.
-5. The app shows a demo PNR and ticket. Payment is simulated; no card or bank details are collected.
+1. Availability combines confirmed bookings with active temporary holds.
+2. On continuing to payment, the API validates the route, class, quota, passenger data and fare, then creates a five-minute seat hold in PostgreSQL. Seat-row locks are held only during the database transaction, never during the payment screen.
+3. The checkout records its lifecycle: HELD → PAYMENT_PENDING → CONFIRMED, or FAILED / EXPIRED / CANCELLED. Payment outcomes are simulated and written to a transaction ledger.
+4. On simulated success, the API locks and rechecks the inventory, creates the booking and payment ledger entry in one database transaction, and releases the hold. A retry returns the original booking.
+5. Failed, abandoned or expired checkouts release inventory. Cancelling a confirmed demo booking records a simulated refund and makes the segment available again.
+6. Route spans use half-open segments: Delhi → Kanpur and Kanpur → Patna may reuse the same seat; overlapping spans cannot. Inventory is keyed by train, class and the train’s origin departure date.
 
-This demonstrates a seat-safety approach for a project. It is not a description of IRCTC's internal implementation.
+The row locks and database transaction provide the final protection against overlapping bookings. This is an educational implementation, not a description of IRCTC internals.
+
+## Industry-style engineering included
+
+- Database-backed sessions use hashed session identifiers and HttpOnly cookies; production cookies are Secure. Authenticated browser writes require an allowed Origin and a custom request header to mitigate CSRF.
+- Login and registration have an IP and account based attempt limit. This in-process limiter is suitable for the single-instance demo; a scaled production deployment should use a shared rate-limit store.
+- Checkout creation accepts an idempotency key. Payment completion is idempotent per checkout, and the payment/refund ledger records simulated outcomes.
+- PostgreSQL schema changes run through versioned migrations. Temporary holds expire automatically, and Render readiness checks verify database connectivity.
+- The API emits structured request logs with request IDs and exposes basic Prometheus-format request, latency and process metrics at /api/metrics.
+- GitHub Actions runs syntax checks and unit plus PostgreSQL concurrency tests for pull requests. The GitHub Pages deployment waits for the same checks after a push to main.
+
+For the most reliable signed-in demo, use the Render address above so the frontend and API share an origin. The GitHub Pages mirror calls the API across sites; some browsers restrict third-party cookies in that setup.
+
+## Monitoring and operations
+
+- Liveness: /api/health
+- Readiness, including PostgreSQL: /api/ready
+- Process-local metrics: /api/metrics
+- Render logs contain structured request IDs for following a failed request.
+- Metrics reset when the service restarts. Central alerting, measured SLOs and a tested database restore plan still need provider configuration.
+
+See the operations notes in docs/operations.md before connecting another environment.
 
 ## Run locally
 
@@ -113,48 +136,53 @@ Open [http://localhost:5174](http://localhost:5174). Accounts and bookings in th
 
 | Command | Purpose |
 |---|---|
-| `npm run dev` | Start the API and full-stack frontend locally |
-| `npm run dev:demo` | Start the browser-storage demo |
-| `npm run check` | Check JavaScript syntax |
-| `npm test` | Run the existing browser-storage tests |
+| npm run dev | Start the API and full-stack frontend locally |
+| npm run dev:demo | Start the browser-only demo |
+| npm run check | Check JavaScript syntax |
+| npm test | Run unit tests; PostgreSQL integration coverage runs when TEST_DATABASE_URL is set |
+
+For database-backed tests, point TEST_DATABASE_URL at a disposable PostgreSQL database. Never point the test suite at the hosted demo database; the integration test creates and removes fictional test records.
 
 ## Live services
 
 | Service | URL | Hosting |
 |---|---|---|
-| Frontend | [rachit1807.github.io/RailYatra](https://rachit1807.github.io/RailYatra/) | GitHub Pages |
-| API | [railyatra-api.onrender.com](https://railyatra-api.onrender.com) | Render |
-| API health | [Check API and database status](https://railyatra-api.onrender.com/api/health) | Render → Neon PostgreSQL |
+| Full-stack application | [railyatra-api.onrender.com](https://railyatra-api.onrender.com/) | Render |
+| Static frontend mirror | [rachit1807.github.io/RailYatra](https://rachit1807.github.io/RailYatra/) | GitHub Pages |
+| API readiness | [Check API and database](https://railyatra-api.onrender.com/api/ready) | Render → Neon PostgreSQL |
+| API metrics | [Prometheus-format metrics](https://railyatra-api.onrender.com/api/metrics) | Render |
 
-The API deployment expects `DATABASE_URL` to be configured as a secret in Render. The committed `render.yaml` documents the backend service setup. Free hosting may sleep when idle, so the first request can take longer. Check provider terms and data retention before using hosted demo data.
+The API deployment expects DATABASE_URL to be configured as a secret in Render. The committed Render Blueprint documents service setup and the readiness check. Free hosting may sleep when idle, so the first request can take longer. Check provider terms and data retention before using hosted demo data.
 
 ## Repository map
 
 ```text
 api.js                 Express API and PostgreSQL-backed booking logic
-api/schema.sql         Database schema
+api/schema.sql         Base PostgreSQL schema
+api/migrations/        Versioned schema upgrades
 server.mjs             Full-stack local server
 server-demo.mjs        Browser-only demo server
 dist/                  Static application published to GitHub Pages
-docs/                  README diagrams and data visualizations
+docs/                  Architecture diagrams, charts and operations notes
 compose.yaml           Local PostgreSQL service
 render.yaml            Render service configuration
-.github/workflows/     GitHub Pages deployment workflow
+tests/                  Unit, browser and PostgreSQL integration tests
+.github/workflows/     Quality checks and gated Pages deployment
 ```
 
 ## Demo boundaries and security
 
 - No live railway timetable, availability, ticket issuance, GPS feed or IRCTC integration.
-- The checkout, payment, refunds, train tracking and meal delivery are simulations. No real money is charged.
-- Shared accounts and bookings are stored in the hosted demo database when the API is online. Use fictional names, email addresses and passwords you do not use elsewhere.
-- This project is for learning and portfolio demonstration. Its browser-stored bearer token and demo authentication are not production-grade security controls.
-
----
+- Checkout, payment, refunds, train tracking and meal delivery are simulations. No card or bank details are collected and no real money moves.
+- Tickets are clearly marked as demos and cannot be used to board a train.
+- Use fictional names, email addresses and passwords you do not use elsewhere.
+- Session cookies and database booking locks demonstrate safer patterns, but this repository is not production-certified. It has no email verification, password reset, live gateway/webhook integration, centralized alerting, or provider-configured backup/restore runbook.
+- The GitHub Pages mirror and Render API use different sites. Browser privacy settings can block cross-site cookies; the Render full-stack URL is the recommended demo entry point.
 
 <div align="center">
 
 **RailYatra** · Built as a railway system-design and full-stack learning project.
 
-[Live demo](https://rachit1807.github.io/RailYatra/) · [GitHub repository](https://github.com/rachit1807/RailYatra)
+[Live demo](https://railyatra-api.onrender.com/) · [GitHub Pages mirror](https://rachit1807.github.io/RailYatra/) · [GitHub repository](https://github.com/rachit1807/RailYatra)
 
 </div>
