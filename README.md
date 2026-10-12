@@ -31,7 +31,9 @@ The app still serves sample timetables for 41 major stations and 30 directional 
 
 **Frontend demo:** [https://rachit1807.github.io/RailYatra/](https://rachit1807.github.io/RailYatra/)
 
-GitHub Pages publishes the static `dist` directory. `render.yaml` describes the separate API service; it requires a `DATABASE_URL` for PostgreSQL. After the API is deployed, set `window.RY_API_BASE` in `dist/config.js` to its HTTPS origin and push that change so GitHub Pages uses shared server data.
+**Backend API:** [https://railyatra-api.onrender.com](https://railyatra-api.onrender.com) · [health status](https://railyatra-api.onrender.com/api/health)
+
+GitHub Pages publishes the static `dist` directory. The frontend is configured to use the Render API for shared accounts, bookings, seat inventory, cancellations and meal orders. `render.yaml` describes the API service and expects its PostgreSQL connection string as the secret `DATABASE_URL` environment variable.
 
 Do not point this app at another project's database. Render's free PostgreSQL databases expire after 30 days, so they are suitable only for temporary demos; use a persistent database for data you need to keep. See [Render's current free-instance limits](https://render.com/docs/free).
 
