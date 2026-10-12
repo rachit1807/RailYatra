@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: railyatra-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: PGSSL
+        value: require
+      - key: PG_POOL_SIZE
+        value: "5"
+      - key: ALLOWED_ORIGINS
+        value: https://rachit1807.github.io,http://localhost:5173,http://127.0.0.1:5173

@@ -28,10 +28,77 @@ export function fare(t,r,cls,count,quota){const distance=Math.max(80,Math.round(
 export function journeyTime(t,r,index){const ms=Date.parse(r.originDate+'T00:00:00+05:30')+(t.start+t.offsets[index])*60000;return{iso:new Date(ms).toISOString(),date:new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric'}).format(ms),time:new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:false}).format(ms)};}
 let dbPromise;
 export function database(){return dbPromise??=new Promise((resolve,reject)=>{const req=indexedDB.open('railyatra-v1',1);req.onupgradeneeded=()=>{const d=req.result;d.createObjectStore('users',{keyPath:'email'});d.createObjectStore('bookings',{keyPath:'pnr'});d.createObjectStore('orders',{keyPath:'id'});};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
-export async function all(store){const db=await database();return new Promise((resolve,reject)=>{const r=db.transaction(store).objectStore(store).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+async function localAll(store){const db=await database();return new Promise((resolve,reject)=>{const r=db.transaction(store).objectStore(store).getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 export async function hash(password,salt){const bytes=new TextEncoder().encode(salt+password);return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');}
-export async function register(name,email,password){const salt=crypto.randomUUID();const u={name,email,salt,password:await hash(password,salt)};const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction('users','readwrite');tx.objectStore('users').add(u);tx.oncomplete=()=>resolve(u);tx.onabort=()=>reject(Error('This email already has a demo account. Sign in instead.'));});}
-export async function authenticate(email,password){const u=(await all('users')).find(u=>u.email===email);if(!u||u.password!==await hash(password,u.salt))throw Error('Email or password is incorrect.');return u;}
-export async function reserve(draft){const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction('bookings','readwrite');const st=tx.objectStore('bookings');let result,error;st.getAll().onsuccess=e=>{const bookings=e.target.result;if(bookings.some(b=>b.paymentId===draft.paymentId)){error=Error('This checkout has already been completed. See your journeys.');tx.abort();return;}const free=availableSeats(bookings,draft,draft.cls);if(draft.seats.length!==draft.passengers.length||new Set(draft.seats).size!==draft.seats.length||draft.seats.some(s=>!free.includes(s))){error=Error('A selected seat was just booked. Go back and choose available seats. No demo payment was recorded.');tx.abort();return;}let pnr;do{pnr=String(1000000000+crypto.getRandomValues(new Uint32Array(1))[0]%9000000000);}while(bookings.some(b=>b.pnr===pnr));result={...draft,pnr,status:'CONFIRMED',bookedAt:new Date().toISOString()};st.add(result);};tx.oncomplete=()=>resolve(result);tx.onabort=()=>reject(error??tx.error??Error('Reservation failed. Please retry.'));tx.onerror=()=>{};});}
-export async function cancel(pnr,email){const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction(['bookings','orders'],'readwrite');let error;const st=tx.objectStore('bookings');st.get(pnr).onsuccess=e=>{const b=e.target.result;if(!b||b.email!==email||b.status!=='CONFIRMED'||Date.parse(b.departure.iso)<Date.now()){error=Error('Only your upcoming confirmed tickets can be cancelled.');tx.abort();return;}b.status='CANCELLED';b.cancelledAt=new Date().toISOString();b.refund=b.fare.total;st.put(b);const os=tx.objectStore('orders');os.getAll().onsuccess=e=>e.target.result.filter(o=>o.pnr===pnr&&o.email===email).forEach(o=>os.put({...o,status:'CANCELLED'}));};tx.oncomplete=()=>resolve();tx.onabort=()=>reject(error??tx.error);});}
-export async function orderFood(order){const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction(['bookings','orders'],'readwrite');let error;tx.objectStore('bookings').get(order.pnr).onsuccess=e=>{const b=e.target.result;if(!b||b.email!==order.email||b.status!=='CONFIRMED'||Date.parse(b.departure.iso)<Date.now()){error=Error('Choose an upcoming confirmed journey.');tx.abort();return;}tx.objectStore('orders').add({...order,id:crypto.randomUUID(),status:'PLACED',createdAt:new Date().toISOString()});};tx.oncomplete=()=>resolve();tx.onabort=()=>reject(error??tx.error);});}
+async function localRegister(name,email,password){const salt=crypto.randomUUID();const u={name,email,salt,password:await hash(password,salt)};const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction('users','readwrite');tx.objectStore('users').add(u);tx.oncomplete=()=>resolve(u);tx.onabort=()=>reject(Error('This email already has a demo account. Sign in instead.'));});}
+async function localAuthenticate(email,password){const u=(await localAll('users')).find(u=>u.email===email);if(!u||u.password!==await hash(password,u.salt))throw Error('Email or password is incorrect.');return u;}
+async function localReserve(draft){const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction('bookings','readwrite');const st=tx.objectStore('bookings');let result,error;st.getAll().onsuccess=e=>{const bookings=e.target.result;if(bookings.some(b=>b.paymentId===draft.paymentId)){error=Error('This checkout has already been completed. See your journeys.');tx.abort();return;}const free=availableSeats(bookings,draft,draft.cls);if(draft.seats.length!==draft.passengers.length||new Set(draft.seats).size!==draft.seats.length||draft.seats.some(s=>!free.includes(s))){error=Error('A selected seat was just booked. Go back and choose available seats. No demo payment was recorded.');tx.abort();return;}let pnr;do{pnr=String(1000000000+crypto.getRandomValues(new Uint32Array(1))[0]%9000000000);}while(bookings.some(b=>b.pnr===pnr));result={...draft,pnr,status:'CONFIRMED',bookedAt:new Date().toISOString()};st.add(result);};tx.oncomplete=()=>resolve(result);tx.onabort=()=>reject(error??tx.error??Error('Reservation failed. Please retry.'));tx.onerror=()=>{};});}
+async function localCancel(pnr,email){const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction(['bookings','orders'],'readwrite');let error;const st=tx.objectStore('bookings');st.get(pnr).onsuccess=e=>{const b=e.target.result;if(!b||b.email!==email||b.status!=='CONFIRMED'||Date.parse(b.departure.iso)<Date.now()){error=Error('Only your upcoming confirmed tickets can be cancelled.');tx.abort();return;}b.status='CANCELLED';b.cancelledAt=new Date().toISOString();b.refund=b.fare.total;st.put(b);const os=tx.objectStore('orders');os.getAll().onsuccess=e=>e.target.result.filter(o=>o.pnr===pnr&&o.email===email).forEach(o=>os.put({...o,status:'CANCELLED'}));};tx.oncomplete=()=>resolve();tx.onabort=()=>reject(error??tx.error);});}
+async function localOrderFood(order){const db=await database();return new Promise((resolve,reject)=>{const tx=db.transaction(['bookings','orders'],'readwrite');let error;tx.objectStore('bookings').get(order.pnr).onsuccess=e=>{const b=e.target.result;if(!b||b.email!==order.email||b.status!=='CONFIRMED'||Date.parse(b.departure.iso)<Date.now()){error=Error('Choose an upcoming confirmed journey.');tx.abort();return;}tx.objectStore('orders').add({...order,id:crypto.randomUUID(),status:'PLACED',createdAt:new Date().toISOString()});};tx.oncomplete=()=>resolve();tx.onabort=()=>reject(error??tx.error);});}
+
+const apiOrigin=()=>typeof window!=='undefined'?String(window.RY_API_BASE??'').replace(/\/$/,''):'';
+export const backendEnabled=()=>Boolean(apiOrigin());
+const accessToken=()=>typeof localStorage!=='undefined'?localStorage.getItem('ry-token'):null;
+async function apiRequest(path,options={}){
+  const headers={Accept:'application/json',...(options.body?{'Content-Type':'application/json'}:{}),...options.headers};
+  const token=options.auth===false?null:accessToken();
+  if(token)headers.Authorization=`Bearer ${token}`;
+  let response;
+  try{response=await fetch(`${apiOrigin()}/api${path}`,{...options,headers,body:options.body?JSON.stringify(options.body):undefined});}
+  catch{throw Error('RailYatra server is unavailable. Check the backend connection and try again.');}
+  if(response.status===204)return null;
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok){const error=Error(payload.error??'RailYatra could not complete that request.');error.status=response.status;if(response.status===401)localStorage.removeItem('ry-token');throw error;}
+  return payload;
+}
+function saveToken(token){localStorage.setItem('ry-token',token);}
+export async function validateSession(){
+  if(!backendEnabled()||!accessToken())return null;
+  try{return await apiRequest('/auth/me');}
+  catch(error){if(error.status===401)return null;throw error;}
+}
+export async function all(store){
+  if(!backendEnabled())return localAll(store);
+  if(store==='users'){
+    if(!accessToken())return[];
+    const current=await validateSession();
+    return current?[current]:[];
+  }
+  if(!accessToken())return[];
+  if(store==='bookings')return apiRequest('/bookings');
+  if(store==='orders')return apiRequest('/food-orders');
+  return[];
+}
+export async function getAvailability(search){
+  if(!backendEnabled()||!search)return null;
+  const query=new URLSearchParams({from:search.from,to:search.to,date:search.date});
+  return apiRequest(`/availability?${query}`,{auth:false});
+}
+export async function register(name,email,password){
+  if(!backendEnabled())return localRegister(name,email,password);
+  const response=await apiRequest('/auth/register',{method:'POST',auth:false,body:{name,email,password}});
+  saveToken(response.token);
+  return response.user;
+}
+export async function authenticate(email,password){
+  if(!backendEnabled())return localAuthenticate(email,password);
+  const response=await apiRequest('/auth/login',{method:'POST',auth:false,body:{email,password}});
+  saveToken(response.token);
+  return response.user;
+}
+export async function logout(){
+  if(backendEnabled()&&accessToken())try{await apiRequest('/auth/logout',{method:'POST'});}catch{}
+  if(typeof localStorage!=='undefined')localStorage.removeItem('ry-token');
+}
+export async function reserve(draft){
+  if(!backendEnabled())return localReserve(draft);
+  return apiRequest('/bookings',{method:'POST',body:{...draft,paymentOutcome:'SUCCESS'}});
+}
+export async function cancel(pnr,email){
+  if(!backendEnabled())return localCancel(pnr,email);
+  return apiRequest(`/bookings/${encodeURIComponent(pnr)}/cancel`,{method:'POST'});
+}
+export async function orderFood(order){
+  if(!backendEnabled())return localOrderFood(order);
+  return apiRequest('/food-orders',{method:'POST',body:order});
+}

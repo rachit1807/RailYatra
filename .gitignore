@@ -1,4 +1,8 @@
 node_modules/
+.env
+.env.*
+!.env.example
+.npm-cache/
 .DS_Store
 *.tar.gz
 test-artifacts/
