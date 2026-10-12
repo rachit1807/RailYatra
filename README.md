@@ -188,7 +188,7 @@ tests/                  Unit, browser and PostgreSQL integration tests
 
 <div align="center">
 
-**RailYatra** · Built as a railway system-design and full-stack learning project.
+**RailYatra** · Made with ❤️ by [Rachit Tripathi](https://www.linkedin.com/in/rachittripathi2509/) · A railway system-design and full-stack learning project.
 
 [Live demo](https://railyatra-api.onrender.com/) · [GitHub Pages mirror](https://rachit1807.github.io/RailYatra/) · [GitHub repository](https://github.com/rachit1807/RailYatra)
 
