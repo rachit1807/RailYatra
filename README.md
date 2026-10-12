@@ -1,44 +1,160 @@
+<div align="center">
+
 # RailYatra
 
-An independent India-wide railway booking demo. It now has a Node.js/Express API and PostgreSQL-backed accounts, bookings, seat inventory, cancellations and meal orders. Train schedules, tracking and payments remain simulated. It is not affiliated with IRCTC, does not connect to live railway services, and its tickets are not valid for travel.
+### Plan an India-wide rail journey in a polished, full-stack booking simulator.
 
-## Run the full-stack app locally
+A portfolio project for exploring the railway booking experience: accounts, route search, seat selection, simulated checkout, PNR lookup and downloadable demo tickets.
 
-Requires Node.js 18+, npm and Docker Desktop.
+[**Open the live demo**](https://rachit1807.github.io/RailYatra/) · [API health](https://railyatra-api.onrender.com/api/health) · [Source code](https://github.com/rachit1807/RailYatra)
 
-```sh
+[![Pages deployment](https://github.com/rachit1807/RailYatra/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/rachit1807/RailYatra/actions/workflows/deploy-pages.yml)
+[![API status](https://img.shields.io/website?url=https%3A%2F%2Frailyatra-api.onrender.com%2Fapi%2Fhealth&label=API&up_message=online&down_message=offline)](https://railyatra-api.onrender.com/api/health)
+![Node.js](https://img.shields.io/badge/Node.js-18%2B-43853d?logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169e1?logo=postgresql&logoColor=white)
+
+</div>
+
+> **Demo only.** RailYatra is an independent learning project, not affiliated with IRCTC. It does not connect to live railway systems. Train data, tracking and payments are simulated; tickets are not valid for travel.
+
+## Live preview
+
+[Open RailYatra](https://rachit1807.github.io/RailYatra/) and choose **Explore with a demo account** to try the current interface with fictional demo data. The diagrams below document the deployed architecture and the exact sample dataset.
+
+## Built with
+
+<p>
+  <img alt="HTML5" src="https://img.shields.io/badge/HTML5-frontend-E34F26?logo=html5&logoColor=white">
+  <img alt="CSS3" src="https://img.shields.io/badge/CSS3-responsive%20UI-1572B6?logo=css3&logoColor=white">
+  <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-ES%20modules-F7DF1E?logo=javascript&logoColor=222">
+  <img alt="Node.js" src="https://img.shields.io/badge/Node.js-runtime-339933?logo=nodedotjs&logoColor=white">
+  <img alt="Express" src="https://img.shields.io/badge/Express-REST%20API-000000?logo=express&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-persistence-4169E1?logo=postgresql&logoColor=white">
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-local%20database-2496ED?logo=docker&logoColor=white">
+  <img alt="GitHub Actions" src="https://img.shields.io/badge/GitHub%20Actions-deployment-2088FF?logo=githubactions&logoColor=white">
+  <img alt="GitHub Pages" src="https://img.shields.io/badge/GitHub%20Pages-frontend%20hosting-222222?logo=githubpages&logoColor=white">
+  <img alt="Render" src="https://img.shields.io/badge/Render-API%20hosting-46E3B7?logo=render&logoColor=111">
+  <img alt="Neon" src="https://img.shields.io/badge/Neon-managed%20PostgreSQL-00E599?logo=neon&logoColor=111">
+</p>
+
+| Layer | Tools | Role |
+|---|---|---|
+| Frontend | HTML, CSS, vanilla JavaScript modules | Responsive booking interface and ticket downloads |
+| API | Node.js, Express 5 | Authentication, booking validation and service endpoints |
+| Data | PostgreSQL, `pg` | Shared accounts, reservations, seat inventory and meal orders |
+| Local setup | Docker Compose | Runs a PostgreSQL database for development |
+| Hosting | GitHub Pages, Render, Neon | Static frontend, API service and hosted PostgreSQL |
+
+## What you can try
+
+- Create an account or use the in-app demo account; sign in and out.
+- Search sample routes across **41 major Indian stations**, compare **30 directional sample services**, and choose from **Sleeper, 3A, 2A and 1A**.
+- Select passengers and seats, then complete a **simulated** payment flow.
+- View a demo PNR and download the ticket as an image or PDF.
+- Check upcoming, past and cancelled journeys; inspect recent demo transactions and request a simulated cancellation/refund.
+- Explore a sample train-progress timeline, place a sample onboard meal order, and switch between light and dark themes.
+
+### Demo network at a glance
+
+![Chart showing 41 sample stations, 30 directional train services and 4 travel classes](docs/demo-dataset.svg)
+
+These figures describe the curated sample data in the repository. They are not live route coverage, train availability or booking inventory.
+
+## How it is put together
+
+![RailYatra architecture: browser frontend, GitHub Pages, Render Express API and Neon PostgreSQL](docs/architecture.svg)
+
+The GitHub Pages build serves the static `dist/` frontend. When configured with the hosted API, the browser sends requests to the Express service on Render, which persists shared demo records in PostgreSQL on Neon. For local development, Docker Compose can run PostgreSQL on your machine.
+
+### Seat booking flow
+
+1. Search and view sample train availability.
+2. Select a train, travel class, passengers and seats.
+3. The browser sends the request to the API; the API validates the route, class, quota, passenger data and fare.
+4. In a PostgreSQL transaction, the API locks the relevant seat inventory rows, rechecks overlapping route segments, and confirms the booking. This lets adjacent, non-overlapping journey segments reuse the same seat while blocking overlapping allocations.
+5. The app shows a demo PNR and ticket. Payment is simulated; no card or bank details are collected.
+
+This demonstrates a seat-safety approach for a project. It is not a description of IRCTC's internal implementation.
+
+## Run locally
+
+### Requirements
+
+- Node.js 18 or newer and npm
+- Docker Desktop (for the PostgreSQL-backed version)
+
+### Full-stack mode
+
+```bash
+git clone https://github.com/rachit1807/RailYatra.git
+cd RailYatra
 npm ci
 cp .env.example .env
 docker compose up -d postgres
 npm run dev
 ```
 
-Open http://localhost:5173. The first server start creates the database tables. Create a demo account with a fictional email and password of at least eight characters. The demo sign-in button uses one shared public demo account, so do not enter personal information there.
+Open [http://localhost:5173](http://localhost:5173). The server initializes the schema at startup. Create an account with fictional details, or choose the in-app demo account. `.env` is excluded from Git; use `.env.example` as the local template.
 
-If you open the static files with VS Code Live Server, the app uses browser-local demo storage. Use `npm run dev` with PostgreSQL to try the full-stack version. Set `DATABASE_URL` in `.env` to use a different PostgreSQL server. `.env` is ignored by Git.
+To use a different PostgreSQL instance, set `DATABASE_URL` in `.env`. Never commit database credentials.
 
-To run the browser-only version without Docker/PostgreSQL, use `npm run dev:demo` and open http://localhost:5174.
+### Browser-only mode
 
-The browser integration page is available at http://localhost:5173/__reservation-test when the local server is running. `npm test` runs the existing browser-storage engine tests; `npm run check` checks JavaScript syntax.
+Without Docker or PostgreSQL, run the local-only demo:
 
-## Booking and seat safety
+```bash
+npm run dev:demo
+```
 
-The API validates passenger details, train, route, class, quota and fare on the server. A successful simulated payment calls the booking endpoint. PostgreSQL transactions lock the selected train/date/class/seat rows in a consistent order, then recheck overlapping route segments before confirming the booking. This prevents two concurrent accounts from receiving the same seat on overlapping portions of a journey. Adjacent segments may reuse a seat. Cancellation locks the same inventory rows, marks the booking cancelled and updates linked meal orders atomically. A payment reference makes checkout retries idempotent.
+Open [http://localhost:5174](http://localhost:5174). Accounts and bookings in this mode stay in that browser.
 
-The app still serves sample timetables for 41 major stations and 30 directional services. Tracking is an interactive sample timeline, not live GPS. Food orders do not charge or deliver meals. The payment screen is simulated and collects no card or bank details.
+### Useful project commands
 
-## Hosting
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Start the API and full-stack frontend locally |
+| `npm run dev:demo` | Start the browser-storage demo |
+| `npm run check` | Check JavaScript syntax |
+| `npm test` | Run the existing browser-storage tests |
 
-**Frontend demo:** [https://rachit1807.github.io/RailYatra/](https://rachit1807.github.io/RailYatra/)
+## Live services
 
-**Backend API:** [https://railyatra-api.onrender.com](https://railyatra-api.onrender.com) · [health status](https://railyatra-api.onrender.com/api/health)
+| Service | URL | Hosting |
+|---|---|---|
+| Frontend | [rachit1807.github.io/RailYatra](https://rachit1807.github.io/RailYatra/) | GitHub Pages |
+| API | [railyatra-api.onrender.com](https://railyatra-api.onrender.com) | Render |
+| API health | [Check API and database status](https://railyatra-api.onrender.com/api/health) | Render → Neon PostgreSQL |
 
-GitHub Pages publishes the static `dist` directory. The frontend is configured to use the Render API for shared accounts, bookings, seat inventory, cancellations and meal orders. `render.yaml` describes the API service and expects its PostgreSQL connection string as the secret `DATABASE_URL` environment variable.
+The API deployment expects `DATABASE_URL` to be configured as a secret in Render. The committed `render.yaml` documents the backend service setup. Free hosting may sleep when idle, so the first request can take longer. Check provider terms and data retention before using hosted demo data.
 
-Do not point this app at another project's database. Render's free PostgreSQL databases expire after 30 days, so they are suitable only for temporary demos; use a persistent database for data you need to keep. See [Render's current free-instance limits](https://render.com/docs/free).
+## Repository map
 
-## Demo limits
+```text
+api.js                 Express API and PostgreSQL-backed booking logic
+api/schema.sql         Database schema
+server.mjs             Full-stack local server
+server-demo.mjs        Browser-only demo server
+dist/                  Static application published to GitHub Pages
+docs/                  README diagrams and data visualizations
+compose.yaml           Local PostgreSQL service
+render.yaml            Render service configuration
+.github/workflows/     GitHub Pages deployment workflow
+```
 
-Bookings and accounts are shared only when the frontend is configured to use the API. Without that setting, the static GitHub Pages version uses this browser's IndexedDB. The API stores password hashes and expiring sessions, but its bearer token is kept in browser storage; this is a learning demo, not production authentication. Do not use real passwords or personal passenger details.
+## Demo boundaries and security
 
-Real railway availability, ticket issuance, live tracking and payment settlement require authorized external integrations and production security/reconciliation work. No real payment provider is connected.
+- No live railway timetable, availability, ticket issuance, GPS feed or IRCTC integration.
+- The checkout, payment, refunds, train tracking and meal delivery are simulations. No real money is charged.
+- Shared accounts and bookings are stored in the hosted demo database when the API is online. Use fictional names, email addresses and passwords you do not use elsewhere.
+- This project is for learning and portfolio demonstration. Its browser-stored bearer token and demo authentication are not production-grade security controls.
+
+---
+
+<div align="center">
+
+**RailYatra** · Built as a railway system-design and full-stack learning project.
+
+[Live demo](https://rachit1807.github.io/RailYatra/) · [GitHub repository](https://github.com/rachit1807/RailYatra)
+
+</div>

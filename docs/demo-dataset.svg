@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">RailYatra sample network counts</title>
+  <desc id="desc">The demo includes 41 sample stations, 30 directional sample train services and 4 travel classes. These are curated demo counts, not live availability.</desc>
+  <defs>
+    <linearGradient id="barA" x1="0" x2="1">
+      <stop stop-color="#2a6650"/>
+      <stop offset="1" stop-color="#6d9b70"/>
+    </linearGradient>
+    <linearGradient id="barB" x1="0" x2="1">
+      <stop stop-color="#c87842"/>
+      <stop offset="1" stop-color="#e8aa68"/>
+    </linearGradient>
+    <linearGradient id="barC" x1="0" x2="1">
+      <stop stop-color="#47768a"/>
+      <stop offset="1" stop-color="#83aeb0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="560" rx="28" fill="#f3f0e7"/>
+  <text x="64" y="70" fill="#183e32" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="700" letter-spacing="3">DEMO DATASET &#xB7; NOT LIVE RAILWAY INVENTORY</text>
+  <text x="64" y="118" fill="#183e32" font-family="Inter,Arial,sans-serif" font-size="32" font-weight="700">A curated network for end-to-end booking practice</text>
+  <text x="64" y="154" fill="#68776d" font-family="Inter,Arial,sans-serif" font-size="16">Each bar shows a count from the sample data shipped with the demo.</text>
+  <g font-family="Inter,Arial,sans-serif" font-size="17" fill="#30483b">
+    <text x="66" y="235">Major stations</text>
+    <text x="66" y="337">Directional train services</text>
+    <text x="66" y="439">Travel classes</text>
+  </g>
+  <g fill="#e2dfd5">
+    <rect x="300" y="205" width="670" height="48" rx="12"/>
+    <rect x="300" y="307" width="670" height="48" rx="12"/>
+    <rect x="300" y="409" width="670" height="48" rx="12"/>
+  </g>
+  <rect x="300" y="205" width="670" height="48" rx="12" fill="url(#barA)"/>
+  <rect x="300" y="307" width="490" height="48" rx="12" fill="url(#barB)"/>
+  <rect x="300" y="409" width="66" height="48" rx="12" fill="url(#barC)"/>
+  <g fill="#183e32" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="700">
+    <text x="1000" y="239">41</text>
+    <text x="820" y="341">30</text>
+    <text x="395" y="443">4</text>
+  </g>
+  <g fill="#7b887f" font-family="Inter,Arial,sans-serif" font-size="13">
+    <text x="300" y="487">0</text>
+    <text x="945" y="487">41 curated stations</text>
+  </g>
+  <path d="M300 475h670" stroke="#c8c5bb" stroke-width="1"/>
+  <rect x="64" y="505" width="1072" height="1" fill="#ded9cb"/>
+  <text x="64" y="535" fill="#69766d" font-family="Inter,Arial,sans-serif" font-size="14">Counts describe the demo seed data. Search results, schedules, fare estimates and availability are illustrative.</text>
+</svg>

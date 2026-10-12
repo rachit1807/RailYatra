@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="620" viewBox="0 0 1440 620" role="img" aria-labelledby="title desc">
+  <title id="title">RailYatra application architecture</title>
+  <desc id="desc">The browser loads the static frontend from GitHub Pages. The frontend calls the Express API hosted on Render, which reads and writes booking data in Neon PostgreSQL.</desc>
+  <defs>
+    <linearGradient id="panel" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#fffdf7"/>
+      <stop offset="1" stop-color="#f0ebdf"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M1 1 11 6 1 11" fill="none" stroke="#587767" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="145%">
+      <feDropShadow dx="0" dy="9" stdDeviation="12" flood-color="#21382e" flood-opacity=".10"/>
+    </filter>
+  </defs>
+  <rect width="1440" height="620" rx="28" fill="#f3f0e7"/>
+  <text x="72" y="86" fill="#183e32" font-family="Inter,Arial,sans-serif" font-size="17" font-weight="700" letter-spacing="3">RAILYATRA &#xB7; SYSTEM MAP</text>
+  <text x="72" y="132" fill="#183e32" font-family="Inter,Arial,sans-serif" font-size="34" font-weight="700">A small, clear full-stack architecture</text>
+  <text x="72" y="168" fill="#68776d" font-family="Inter,Arial,sans-serif" font-size="17">Static UI, shared booking API and relational data store</text>
+  <g filter="url(#shadow)">
+    <rect x="70" y="230" width="250" height="230" rx="22" fill="url(#panel)" stroke="#ded8c9"/>
+    <rect x="430" y="230" width="250" height="230" rx="22" fill="url(#panel)" stroke="#ded8c9"/>
+    <rect x="790" y="230" width="250" height="230" rx="22" fill="url(#panel)" stroke="#ded8c9"/>
+    <rect x="1150" y="230" width="220" height="230" rx="22" fill="url(#panel)" stroke="#ded8c9"/>
+  </g>
+  <g font-family="Inter,Arial,sans-serif">
+    <circle cx="118" cy="280" r="24" fill="#e2ece3"/>
+    <text x="118" y="288" text-anchor="middle" fill="#235a45" font-size="22" font-weight="700">01</text>
+    <text x="98" y="340" fill="#183e32" font-size="23" font-weight="700">Browser</text>
+    <text x="98" y="375" fill="#5f6d64" font-size="16">HTML &#xB7; CSS &#xB7; JavaScript</text>
+    <text x="98" y="408" fill="#5f6d64" font-size="15">Search, checkout, tickets</text>
+    <circle cx="478" cy="280" r="24" fill="#e2ece3"/>
+    <text x="478" y="288" text-anchor="middle" fill="#235a45" font-size="22" font-weight="700">02</text>
+    <text x="458" y="340" fill="#183e32" font-size="23" font-weight="700">GitHub Pages</text>
+    <text x="458" y="375" fill="#5f6d64" font-size="16">Static frontend hosting</text>
+    <text x="458" y="408" fill="#5f6d64" font-size="15">Serves the dist/ app</text>
+    <circle cx="838" cy="280" r="24" fill="#e2ece3"/>
+    <text x="838" y="288" text-anchor="middle" fill="#235a45" font-size="22" font-weight="700">03</text>
+    <text x="818" y="340" fill="#183e32" font-size="23" font-weight="700">Render API</text>
+    <text x="818" y="375" fill="#5f6d64" font-size="16">Node.js &#xB7; Express</text>
+    <text x="818" y="408" fill="#5f6d64" font-size="15">Auth, booking rules, API</text>
+    <circle cx="1198" cy="280" r="24" fill="#e2ece3"/>
+    <text x="1198" y="288" text-anchor="middle" fill="#235a45" font-size="22" font-weight="700">04</text>
+    <text x="1178" y="340" fill="#183e32" font-size="23" font-weight="700">Neon</text>
+    <text x="1178" y="375" fill="#5f6d64" font-size="16">PostgreSQL</text>
+    <text x="1178" y="408" fill="#5f6d64" font-size="15">Shared demo records</text>
+  </g>
+  <path d="M320 344h95M680 344h95M1040 344h95" fill="none" stroke="#587767" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="367" y="322" text-anchor="middle" fill="#718077" font-family="Inter,Arial,sans-serif" font-size="13">HTTPS</text>
+  <text x="727" y="322" text-anchor="middle" fill="#718077" font-family="Inter,Arial,sans-serif" font-size="13">REST / JSON</text>
+  <text x="1087" y="322" text-anchor="middle" fill="#718077" font-family="Inter,Arial,sans-serif" font-size="13">SQL</text>
+  <rect x="70" y="510" width="1300" height="62" rx="16" fill="#e8e5da"/>
+  <text x="98" y="549" fill="#45584d" font-family="Inter,Arial,sans-serif" font-size="16"><tspan font-weight="700">Deployment:</tspan> GitHub Pages serves the UI &#xB7; Render runs the API &#xB7; Neon hosts PostgreSQL</text>
+</svg>
