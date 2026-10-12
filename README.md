@@ -58,7 +58,7 @@ The diagrams below document the deployed architecture and the exact sample datas
 
 - Create an account or use the in-app demo account; sign in and out.
 - Search sample routes across **41 major Indian stations**, compare **30 directional sample services**, and choose from **Sleeper, 3A, 2A and 1A**.
-- Select passengers and seats; a server-side hold lasts up to five minutes while you complete the **simulated** payment flow.
+- See live demo inventory labels such as **AVL 1**, **RAC 3** and **WL 2** for each class. Confirmed seats use a five-minute server-side hold during simulated checkout; when the party cannot be confirmed or a queue already exists, request a simulated RAC position (up to three passenger positions) or a numbered waitlist spot. Cancellation can promote queued bookings.
 - View a demo PNR and download the ticket as an image or PDF.
 - Check upcoming, past and cancelled journeys; inspect recent demo transactions and request a simulated cancellation/refund.
 - Explore a sample train-progress timeline, place a sample onboard meal order, and switch between light and dark themes.
@@ -77,14 +77,14 @@ The GitHub Pages build serves the static `dist/` frontend. When configured with 
 
 ### Reservation and payment lifecycle
 
-1. Availability combines confirmed bookings with active temporary holds.
-2. On continuing to payment, the API validates the route, class, quota, passenger data and fare, then creates a five-minute seat hold in PostgreSQL. Seat-row locks are held only during the database transaction, never during the payment screen.
-3. The checkout records its lifecycle: HELD → PAYMENT_PENDING → CONFIRMED, or FAILED / EXPIRED / CANCELLED. Payment outcomes are simulated and written to a transaction ledger.
-4. On simulated success, the API locks and rechecks the inventory, creates the booking and payment ledger entry in one database transaction, and releases the hold. A retry returns the original booking.
-5. Failed, abandoned or expired checkouts release inventory. Cancelling a confirmed demo booking records a simulated refund and makes the segment available again.
-6. Route spans use half-open segments: Delhi → Kanpur and Kanpur → Patna may reuse the same seat; overlapping spans cannot. Inventory is keyed by train, class and the train’s origin departure date.
+1. Availability combines confirmed seats with active five-minute checkout holds. It shows the next simulated RAC/WL position when the selected party cannot be confirmed or an earlier queue already exists.
+2. On continuing with a confirmed seat, the API validates the route, class, quota, passenger data and fare, then creates a five-minute hold in PostgreSQL. Row locks last only for the database transaction, never during the payment screen.
+3. When a passenger requests RAC/WL, the checkout reserves no seat. After simulated payment, the API locks the inventory and assigns a confirmed seat only when enough seats are free and no earlier overlapping queue exists; otherwise it assigns RAC (up to three passenger positions) or a numbered waitlist position.
+4. The checkout records HELD → PAYMENT_PENDING → CONFIRMED, or FAILED / EXPIRED / CANCELLED. Payment outcomes are simulated and recorded in a transaction ledger. A retry returns the original booking.
+5. Failed or expired holds release inventory. Cancelling an upcoming confirmed, RAC or waitlisted demo booking records a simulated refund; the queue is recalculated and eligible passengers are promoted to confirmed when seats free up.
+6. Route spans use half-open segments: Delhi → Kanpur and Kanpur → Patna may reuse the same seat; overlapping spans cannot. Seat inventory and queues are keyed by train, class and the train’s origin departure date.
 
-The row locks and database transaction provide the final protection against overlapping bookings. This is an educational implementation, not a description of IRCTC internals.
+The row locks and database transactions protect confirmed seat inventory and preserve simulated queue order for overlapping routes. RAC/WL here are educational states, not real railway inventory or a description of IRCTC internals.
 
 ## Industry-style engineering included
 
@@ -180,7 +180,7 @@ tests/                  Unit, browser and PostgreSQL integration tests
 ## Demo boundaries and security
 
 - No live railway timetable, availability, ticket issuance, GPS feed or IRCTC integration.
-- Checkout, payment, refunds, train tracking and meal delivery are simulations. No card or bank details are collected and no real money moves.
+- Checkout, confirmed-seat availability, RAC/WL positions, queue promotion, payment, refunds, train tracking and meal delivery are simulations. No card or bank details are collected and no real money moves.
 - Tickets are clearly marked as demos and cannot be used to board a train.
 - Use fictional names, email addresses and passwords you do not use elsewhere.
 - Session cookies and database booking locks demonstrate safer patterns, but this repository is not production-certified. It has no email verification, password reset, live gateway/webhook integration, centralized alerting, or provider-configured backup/restore runbook.

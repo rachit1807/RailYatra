@@ -121,6 +121,50 @@ test('PostgreSQL auth, seat holds, payment lifecycle and concurrent booking safe
     });
     assert.equal(expiredPayment.status, 409, 'expired holds cannot be paid or confirmed');
 
+    const confirmedPnrs = [];
+    for (let seat = 2; seat <= 24; seat++) {
+      const seatCheckout = await openCheckout(first, makeDraft(firstRoute.from, firstRoute.to, seat));
+      assert.equal(seatCheckout.status, 201);
+      const seatHold = await seatCheckout.json();
+      const seatBooking = await request(`/checkouts/${seatHold.id}/payment`, {
+        method: 'POST', cookie: first.cookie, body: {outcome: 'SUCCESS'},
+      });
+      assert.equal(seatBooking.status, 201);
+      confirmedPnrs.push((await seatBooking.json()).pnr);
+    }
+
+    const queuedPnrs = [];
+    for (let position = 1; position <= 4; position++) {
+      const queueDraft = {...makeDraft(firstRoute.from, firstRoute.to, 1), seats: [], queueRequested: true};
+      const queueCheckout = await openCheckout(second, queueDraft);
+      assert.equal(queueCheckout.status, 201);
+      const queueHold = await queueCheckout.json();
+      const queueBooking = await request(`/checkouts/${queueHold.id}/payment`, {
+        method: 'POST', cookie: second.cookie, body: {outcome: 'SUCCESS'},
+      });
+      assert.equal(queueBooking.status, 201);
+      const queued = await queueBooking.json();
+      assert.equal(queued.status, position <= 3 ? 'RAC' : 'WAITLISTED');
+      assert.equal(queued.queuePosition, position <= 3 ? position : 1);
+      queuedPnrs.push(queued.pnr);
+    }
+    const soldOutAvailability = await request(`/availability?from=${firstRoute.from}&to=${firstRoute.to}&date=${date}`);
+    const soldOut = await soldOutAvailability.json();
+    assert.equal(soldOut[train.id].classes['3A'].length, 0);
+    assert.deepEqual(soldOut[train.id].queues['3A'], {racCount: 3, waitlistCount: 1});
+
+    const freedSeat = await request(`/bookings/${confirmedPnrs[0]}/cancel`, {method: 'POST', cookie: first.cookie});
+    assert.equal(freedSeat.status, 200);
+    const hiddenQueue = await request(`/pnr/${queuedPnrs[0]}`, {cookie: first.cookie});
+    assert.equal(hiddenQueue.status, 404, 'PNR lookups remain scoped to the account');
+    const ownQueueBookings = await request('/bookings', {cookie: second.cookie});
+    const rebalanced = await ownQueueBookings.json();
+    assert.equal(rebalanced.find(booking => booking.pnr === queuedPnrs[0]).status, 'CONFIRMED');
+    assert.equal(rebalanced.find(booking => booking.pnr === queuedPnrs[1]).queuePosition, 1);
+    assert.equal(rebalanced.find(booking => booking.pnr === queuedPnrs[2]).queuePosition, 2);
+    assert.equal(rebalanced.find(booking => booking.pnr === queuedPnrs[3]).status, 'RAC');
+    assert.equal(rebalanced.find(booking => booking.pnr === queuedPnrs[3]).queuePosition, 3);
+
     const transactions = await request('/transactions', {cookie: winnerAccount.cookie});
     assert.equal(transactions.status, 200);
     assert((await transactions.json()).some(item => item.pnr === ticket.pnr && item.status === 'SUCCEEDED'));

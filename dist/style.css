@@ -12,3 +12,5 @@
 :root[data-theme="dark"] .ticket th,:root[data-theme="dark"] .quick:hover,:root[data-theme="dark"] .nav-button.active{background:#26382c;color:var(--ink)}:root[data-theme="dark"] .nav-button{color:#aab7ac}:root[data-theme="dark"] .nav-button:hover{background:#202d24}:root[data-theme="dark"] .class-chip.selected{background:#263c2e;border-color:#5a8a68}:root[data-theme="dark"] .demo-tag{border-color:var(--line);color:#a5b3a7}:root[data-theme="dark"] .divider{background:var(--line)}:root[data-theme="dark"] .empty .icon{color:#708677}
 @media(max-width:760px){.auth-panel{flex-direction:column;align-items:stretch;justify-content:flex-start;padding:16px 24px 35px}.auth-panel>.theme-toggle{position:static;align-self:flex-end;margin-bottom:22px}.theme-toggle{padding:8px 9px}.theme-toggle span{display:none}.auth-panel .theme-toggle span{display:inline}}
 @media(max-width:760px){.topbar>.crumb{display:none}}
+
+.class-chip span.status-avl{color:#477852}.class-chip span.status-rac{color:#a36a25}.class-chip span.status-wl{color:#ad5048}.queue-notice{margin:15px 0}.badge.status-rac{background:#fff1de;color:#a36a25}.badge.status-wl{background:#fae7e3;color:#ad5048}
