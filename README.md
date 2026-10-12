@@ -31,6 +31,6 @@ IndexedDB stores accounts, bookings and food orders. localStorage stores the cur
 
 ## Hosting
 
-Static deploy root: `dist`. `.openai/hosting.json` retains the Sites identity. The static server is intended for local development only. External fonts are optional; system fonts are fallback. All booking/export features work without external runtime libraries.
+**Live demo:** [https://rachit1807.github.io/RailYatra/](https://rachit1807.github.io/RailYatra/)
 
-For GitHub, connect an authenticated GitHub account or supply a writable repository remote; this folder initially had no Git repository or GitHub credentials/tooling. Never put tokens in source or remote URLs.
+GitHub Pages publishes the static `dist` directory. Every push to `main` triggers the deployment workflow in `.github/workflows/deploy-pages.yml`. The `server.mjs` file is for local development; GitHub Pages does not run a server. External fonts are optional, with system fonts as a fallback.
