@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><title>RailYatra reservation integration checks</title><h1>Reservation integration checks</h1><pre id="output">Running…</pre><script type="module">
+import {reserve,cancel,all,database,availableSeats,orderFood} from '/engine.js';
+const tag=crypto.randomUUID(),email=`qa-${tag}@railyatra.demo`,trainId=`qa-${tag}`,report=[];
+const check=(ok,name)=>{if(!ok)throw Error(name);report.push('PASS: '+name);document.querySelector('#output').textContent=report.join('\n');};
+const d={email,trainId,originDate:'2099-01-01',date:'2099-01-01',a:0,b:2,cls:'3A',seats:[1],passengers:[{name:'QA',age:30,gender:'Other'}],departure:{iso:'2099-01-01T00:00:00Z'},fare:{total:100}};
+try{
+const results=await Promise.allSettled([reserve({...d,paymentId:crypto.randomUUID()}),reserve({...d,paymentId:crypto.randomUUID()})]);
+check(results.filter(r=>r.status==='fulfilled').length===1&&results.filter(r=>r.status==='rejected').length===1,'Two concurrent overlapping checkouts: exactly one succeeds');
+const winner=results.find(r=>r.status==='fulfilled').value;
+const adjacent=await reserve({...d,a:2,b:4,paymentId:crypto.randomUUID()});
+check(adjacent.seats[0]===winner.seats[0],'Adjacent segment reuses the same seat');
+let rejected=false;try{await reserve({...d,seats:[2],paymentId:winner.paymentId});}catch{rejected=true;}check(rejected,'Same checkout token cannot create a second reservation');
+await orderFood({pnr:winner.pnr,email,name:'QA meal',price:10,station:'NDLS'});
+await cancel(winner.pnr,email);
+const bookings=await all('bookings');check(availableSeats(bookings,d,'3A').includes(1),'Cancellation releases booked segment');
+check((await all('orders')).filter(o=>o.email===email).every(o=>o.status==='CANCELLED'),'Cancellation also cancels linked meal orders');
+check(!availableSeats(bookings,{...d,a:2,b:4},'3A').includes(1),'Adjacent booking remains reserved after original segment cancellation');
+}catch(e){report.push('FAIL: '+e.message);}
+finally{const db=await database();const books=(await all('bookings')).filter(b=>b.email===email),orders=(await all('orders')).filter(o=>o.email===email);await new Promise((resolve,reject)=>{const tx=db.transaction(['bookings','orders'],'readwrite');books.forEach(b=>tx.objectStore('bookings').delete(b.pnr));orders.forEach(o=>tx.objectStore('orders').delete(o.id));tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});document.querySelector('#output').textContent=report.join('\n')+'\nQA records cleaned up. User records preserved.';}
+</script></html>
