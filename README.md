@@ -6,7 +6,7 @@
 
 A portfolio project for exploring the railway booking experience: accounts, route search, seat selection, simulated checkout, PNR lookup and downloadable demo tickets.
 
-[**Open the full-stack demo**](https://railyatra-api.onrender.com/) · [GitHub Pages mirror](https://rachit1807.github.io/RailYatra/) · [API readiness](https://railyatra-api.onrender.com/api/ready) · [Source code](https://github.com/rachit1807/RailYatra)
+[**Full-stack app · recommended**](https://railyatra-api.onrender.com/) · [**Static frontend preview**](https://rachit1807.github.io/RailYatra/) · [API readiness](https://railyatra-api.onrender.com/api/ready) · [Source code](https://github.com/rachit1807/RailYatra)
 
 [![Pages deployment](https://github.com/rachit1807/RailYatra/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/rachit1807/RailYatra/actions/workflows/deploy-pages.yml)
 [![Quality checks](https://github.com/rachit1807/RailYatra/actions/workflows/quality.yml/badge.svg)](https://github.com/rachit1807/RailYatra/actions/workflows/quality.yml)
@@ -21,7 +21,14 @@ A portfolio project for exploring the railway booking experience: accounts, rout
 
 ## Live preview
 
-[Open the full-stack RailYatra demo](https://railyatra-api.onrender.com/) and choose **Explore with a demo account** to try the current interface with fictional demo data. The diagrams below document the deployed architecture and the exact sample dataset.
+Choose the link that matches what you want to try:
+
+| Link | What it runs | Best for |
+|---|---|---|
+| [**Render — full-stack RailYatra app**](https://railyatra-api.onrender.com/) | The frontend and Express API run together; shared demo accounts, bookings and transactions are stored in PostgreSQL on Neon. | The complete sign-in, booking, simulated payment, cancellation and ticket-download flow. Choose **Explore with a demo account** to start. This is the recommended link for using or presenting the project. |
+| [**GitHub Pages — static frontend preview**](https://rachit1807.github.io/RailYatra/) | GitHub Pages serves the static frontend. It sends API requests to the Render service, so it depends on Render being available. | Previewing the interface. Because the frontend and API are on different sites, browser privacy settings may block sign-in cookies; use Render for the complete demo. |
+
+The diagrams below document the deployed architecture and the exact sample dataset. Both links are updated from the `main` branch; the Pages deployment runs after its checks pass.
 
 ## Built with
 
