@@ -1,7 +1,7 @@
 import {createHash, randomBytes, randomInt, randomUUID, scrypt as scryptCallback, timingSafeEqual} from 'node:crypto';
 import {promisify} from 'node:util';
 import express from 'express';
-import {CLASSES, RAC_CAPACITY, STATIONS, TRAINS, addDays, fare, journeyTime, routeFor, today} from './dist/engine.js';
+import {CLASSES, RAC_CAPACITY, STATIONS, TRAINS, addDays, fare, journeyTime, routeFor, simulatedUnavailableSeats, today} from './dist/engine.js';
 
 const scrypt = promisify(scryptCallback);
 const SESSION_DAYS = 7;
@@ -217,6 +217,7 @@ async function freeSeatNumbers(client, booking) {
     [location.trainId, location.originDate, location.travelClass, location.from, location.to],
   );
   const used = new Set(occupied.rows.flatMap(row => row.seats.map(Number)));
+  for (const seat of simulatedUnavailableSeats(location.trainId, location.originDate, location.travelClass, location.from, location.to)) used.add(seat);
   return Array.from({length: 24}, (_, index) => index + 1).filter(seat => !used.has(seat));
 }
 
@@ -418,7 +419,7 @@ export function createApi(pool, {checkoutHoldSeconds = 300} = {}) {
       const byClass = {};
       const queues = {};
       for (const cls of Object.keys(CLASSES)) {
-        const used = new Set();
+        const used = new Set(simulatedUnavailableSeats(train.id, route.originDate, cls, route.a, route.b));
         for (const booking of occupied.rows) {
           if (booking.train_id !== train.id || dateText(booking.origin_date) !== route.originDate || booking.travel_class !== cls) continue;
           if (Number(booking.from_index) < route.b && route.a < Number(booking.to_index)) booking.seats.forEach(seat => used.add(Number(seat)));

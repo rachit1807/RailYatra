@@ -58,7 +58,7 @@ The diagrams below document the deployed architecture and the exact sample datas
 
 - Create an account or use the in-app demo account; sign in and out.
 - Search sample routes across **41 major Indian stations**, compare **30 directional sample services**, and choose from **Sleeper, 3A, 2A and 1A**.
-- See live demo inventory labels such as **AVL 1**, **RAC 3** and **WL 2** for each class. The system automatically allots available seats and holds them for five minutes during simulated checkout; passengers never pick seat numbers. When the party cannot be confirmed or a queue already exists, request a simulated RAC position (up to three passenger positions) or a numbered waitlist spot. Cancellation can promote queued bookings.
+- See changing demo inventory labels such as **AVL 1**, **RAC 3** and **WL 2** for each class. Starting availability is generated from stable sample demand that varies by train, route, class and departure date; it is not live railway data and stays consistent on refresh. Your demo bookings and temporary holds reduce availability, while cancellation and failed or expired payment release seats. The system automatically allots berths; passengers never pick seat numbers. When a party cannot be confirmed or a queue already exists, request a simulated RAC position (up to three passenger positions) or a numbered waitlist spot. Cancellation can promote queued bookings.
 - View a demo PNR and download the ticket as an image or PDF.
 - Check upcoming, past and cancelled journeys; inspect recent demo transactions and request a simulated cancellation/refund.
 - Explore a sample train-progress timeline, place a sample onboard meal order, and switch between light and dark themes.
@@ -77,7 +77,7 @@ The GitHub Pages build serves the static `dist/` frontend. When configured with 
 
 ### Reservation and payment lifecycle
 
-1. Availability combines confirmed seats with active five-minute checkout holds. It shows the next simulated RAC/WL position when the selected party cannot be confirmed or an earlier queue already exists.
+1. Availability starts from deterministic simulated demand that varies by train, route span, class and departure date, then subtracts confirmed seats and active five-minute checkout holds. It shows the next simulated RAC/WL position when the selected party cannot be confirmed or an earlier queue already exists.
 2. After passenger details are entered, the API validates the route, class, quota, passenger data and fare, then briefly locks class inventory, automatically allots the required available seats and creates a five-minute hold in PostgreSQL. Row locks last only for the database transaction, never during the payment screen.
 3. When a passenger requests RAC/WL, the checkout reserves no seat. After simulated payment, the API locks the inventory and assigns a confirmed seat only when enough seats are free and no earlier overlapping queue exists; otherwise it assigns RAC (up to three passenger positions) or a numbered waitlist position.
 4. The checkout records HELD → PAYMENT_PENDING → CONFIRMED, or FAILED / EXPIRED / CANCELLED. Payment outcomes are simulated and recorded in a transaction ledger. A retry returns the original booking.

@@ -24,7 +24,31 @@ export const addDays=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*86400000).toIS
 export function routeFor(t,from,to,date){const a=t.stops.indexOf(from),b=t.stops.indexOf(to);if(a<0||b<=a)return null;const shift=Math.floor((t.start+t.offsets[a])/1440);return{trainId:t.id,a,b,from,to,date,originDate:addDays(date,-shift),duration:t.offsets[b]-t.offsets[a]};}
 export const overlaps=(a,b)=>a.a<b.b&&b.a<a.b;
 export const berth=n=>['Lower','Middle','Upper','Lower','Middle','Upper','Side lower','Side upper'][(n-1)%8];
-export function availableSeats(bookings,r,cls){return Array.from({length:24},(_,i)=>i+1).filter(seat=>!bookings.some(b=>b.status==='CONFIRMED'&&b.trainId===r.trainId&&b.originDate===r.originDate&&b.cls===cls&&overlaps(b,r)&&b.seats.includes(seat)));}
+const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+function seededUnit(value){let hash=2166136261;for(const character of String(value)){hash^=character.codePointAt(0);hash=Math.imul(hash,16777619);}return(hash>>>0)/4294967296;}
+export function simulatedUnavailableSeats(trainId,originDate,cls,fromIndex,toIndex){
+ const train=TRAINS.find(item=>item.id===String(trainId));if(!train)return[];
+ const segmentCount=Math.max(1,train.stops.length-1),from=Number(fromIndex),to=Number(toIndex);
+ if(!Number.isInteger(from)||!Number.isInteger(to)||from<0||to>segmentCount||to<=from)return[];
+ const date=typeof originDate==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(originDate)?originDate:today();
+ const daysAway=clamp((Date.parse(`${date}T00:00:00Z`)-Date.parse(`${today()}T00:00:00Z`))/86400000,0,120);
+ const dayOfWeek=new Date(`${date}T00:00:00Z`).getUTCDay(),weekendDemand=(dayOfWeek===0||dayOfWeek===6)?0.04:0;
+ const classDemand={SL:.15,'3A':.24,'2A':.32,'1A':.4}[cls]??.24;
+ const serviceDemand=train.type==='Premium'?.12:train.type==='Superfast'?.055:0;
+ const routeDemand=.1*((to-from)/segmentCount),leadDemand=.18*(1-Math.min(daysAway,90)/90);
+ const key=`${train.id}|${date}|${cls}`;
+ const sellThrough=clamp(classDemand+serviceDemand+routeDemand+leadDemand+weekendDemand+(seededUnit(`${key}|load`)*.12-.06),.08,.88);
+ const unavailable=new Set();
+ for(let segment=from;segment<to;segment++)unavailable.add(1+Math.floor(seededUnit(`${key}|segment|${segment}|anchor`)*24));
+ for(let seat=1;seat<=24;seat++){
+  if(seededUnit(`${key}|seat|${seat}|sold`)>=sellThrough)continue;
+  const start=Math.floor(seededUnit(`${key}|seat|${seat}|from`)*segmentCount);
+  const length=1+Math.floor(seededUnit(`${key}|seat|${seat}|length`)*(segmentCount-start));
+  if(start<to&&from<start+length)unavailable.add(seat);
+ }
+ return [...unavailable].sort((a,b)=>a-b);
+}
+export function availableSeats(bookings,r,cls){const unavailable=new Set(simulatedUnavailableSeats(r.trainId,r.originDate,cls,r.a,r.b));return Array.from({length:24},(_,i)=>i+1).filter(seat=>!unavailable.has(seat)&&!bookings.some(b=>b.status==='CONFIRMED'&&b.trainId===r.trainId&&b.originDate===r.originDate&&b.cls===cls&&overlaps(b,r)&&b.seats.includes(seat)));}
 export function fare(t,r,cls,count,quota){const distance=Math.max(80,Math.round(t.km*r.duration/t.offsets.at(-1)));const base=Math.round(distance*CLASSES[cls].rate)*count;const reservation=40*count;const quotaCharge=quota==='TATKAL'?150*count:0;const tax=cls==='SL'?0:Math.round((base+reservation+quotaCharge)*.05);return{base,reservation,quotaCharge,tax,service:20,total:base+reservation+quotaCharge+tax+20,distance};}
 export function journeyTime(t,r,index){const ms=Date.parse(r.originDate+'T00:00:00+05:30')+(t.start+t.offsets[index])*60000;return{iso:new Date(ms).toISOString(),date:new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric'}).format(ms),time:new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hour12:false}).format(ms)};}
 let dbPromise;

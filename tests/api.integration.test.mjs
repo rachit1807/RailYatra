@@ -130,8 +130,12 @@ test('PostgreSQL auth, seat holds, payment lifecycle and concurrent booking safe
     });
     assert.equal(expiredPayment.status, 409, 'expired holds cannot be paid or confirmed');
 
+    const beforeFillResponse = await request(`/availability?from=${firstRoute.from}&to=${firstRoute.to}&date=${date}`);
+    assert.equal(beforeFillResponse.status, 200);
+    const availableBeforeFill = (await beforeFillResponse.json())[train.id].classes['3A'];
+    assert(availableBeforeFill.length > 0, 'the route has free demo seats before the inventory race');
     const confirmedPnrs = [];
-    for (let booking = 0; booking < 22; booking++) {
+    for (let booking = 0; booking < availableBeforeFill.length; booking++) {
       const seatCheckout = await openCheckout(first, makeDraft(firstRoute.from, firstRoute.to));
       assert.equal(seatCheckout.status, 201);
       const seatHold = await seatCheckout.json();
