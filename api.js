@@ -127,9 +127,7 @@ function bookingInput(body, userId) {
   });
   const queueRequested = body.queueRequested === true;
   const seats = body.seats ?? [];
-  if (!Array.isArray(seats) || (queueRequested ? seats.length !== 0 : seats.length !== passengers.length) || new Set(seats).size !== seats.length || seats.some(seat => !Number.isInteger(seat) || seat < 1 || seat > 24)) {
-    throw new ApiError(400, queueRequested ? 'Queue bookings must not include seat numbers.' : 'Select one different available seat for each passenger.');
-  }
+  if (!Array.isArray(seats) || seats.length !== 0) throw new ApiError(400, 'Seat numbers are assigned automatically; do not send seat selections.');
   const route = routeFor(train, body.from, body.to, date);
   if (!route) throw new ApiError(400, 'That sample train does not serve this route in that direction.');
   const boarding = body.boarding;
@@ -468,7 +466,7 @@ export function createApi(pool, {checkoutHoldSeconds = 300} = {}) {
       await client.query('BEGIN');
       await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1, 0))', [req.user.id + ':' + idempotencyKey]);
       const prior = await client.query(
-        'SELECT id, status, expires_at, booking_pnr FROM checkout_sessions WHERE user_id=$1 AND idempotency_key=$2 FOR UPDATE',
+        'SELECT id, status, expires_at, booking_pnr, request_payload FROM checkout_sessions WHERE user_id=$1 AND idempotency_key=$2 FOR UPDATE',
         [req.user.id, idempotencyKey],
       );
       if (prior.rowCount) {
@@ -480,39 +478,19 @@ export function createApi(pool, {checkoutHoldSeconds = 300} = {}) {
           const expiredBooking = expiredPayload.rows[0]?.request_payload;
           if (expiredBooking?.seats?.length) await resequenceQueue(client, expiredBooking.train.id, expiredBooking.route.originDate, expiredBooking.travelClass);
           await client.query('COMMIT');
-          throw new ApiError(409, 'That seat hold expired. Return to seat selection and start checkout again.');
+          throw new ApiError(409, 'That automatic seat hold expired. Refresh availability and start checkout again.');
         }
         await client.query('COMMIT');
-        return res.status(200).json({id: prior.rows[0].id, status: prior.rows[0].status, expiresAt: new Date(prior.rows[0].expires_at).toISOString(), pnr: prior.rows[0].booking_pnr});
+        return res.status(200).json({id: prior.rows[0].id, status: prior.rows[0].status, expiresAt: new Date(prior.rows[0].expires_at).toISOString(), pnr: prior.rows[0].booking_pnr, seats: prior.rows[0].request_payload?.seats ?? []});
       }
 
       if (!booking.queueRequested) {
-        for (const seat of booking.seats) {
-          await client.query(
-            'INSERT INTO seat_locks(train_id, origin_date, travel_class, seat_no) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING',
-            [booking.train.id, booking.route.originDate, booking.travelClass, seat],
-          );
-          await client.query(
-            'SELECT seat_no FROM seat_locks WHERE train_id=$1 AND origin_date=$2 AND travel_class=$3 AND seat_no=$4 FOR UPDATE',
-            [booking.train.id, booking.route.originDate, booking.travelClass, seat],
-          );
-        }
-        const conflict = await client.query(
-          [
-            'SELECT 1 FROM bookings b',
-            "WHERE b.train_id=$1 AND b.origin_date=$2 AND b.travel_class=$3 AND b.status='CONFIRMED'",
-            'AND b.from_index < $4 AND b.to_index > $5 AND b.seats && $6::smallint[]',
-            'UNION ALL',
-            'SELECT 1 FROM seat_holds h JOIN checkout_sessions c ON c.id=h.checkout_id',
-            'WHERE h.train_id=$1 AND h.origin_date=$2 AND h.travel_class=$3',
-            'AND h.from_index < $4 AND h.to_index > $5 AND h.seat_no=ANY($6::smallint[])',
-            "AND c.status='HELD' AND c.expires_at > now() LIMIT 1",
-          ].join(' '),
-          [booking.train.id, booking.route.originDate, booking.travelClass, booking.route.b, booking.route.a, booking.seats],
-        );
-        if (conflict.rowCount) throw new ApiError(409, 'A selected seat was just taken or is being held. Refresh availability and choose another seat.');
+        await lockInventory(client, booking.train.id, booking.route.originDate, booking.travelClass);
         const queue = await queueCounts(client, booking);
-        if (queue.racCount + queue.waitlistCount) throw new ApiError(409, 'A simulated RAC/WL queue is already active. Join the queue to keep its order.');
+        if (queue.racCount + queue.waitlistCount) throw new ApiError(409, 'A simulated RAC/WL queue is already active. Refresh availability to request your place in the queue.');
+        const free = await freeSeatNumbers(client, booking);
+        if (free.length < booking.passengers.length) throw new ApiError(409, 'The remaining confirmed seats were just taken. Refresh availability to request RAC/WL.');
+        booking.seats = free.slice(0, booking.passengers.length);
       }
 
       const inserted = await client.query(
@@ -527,7 +505,7 @@ export function createApi(pool, {checkoutHoldSeconds = 300} = {}) {
       }
       await client.query("INSERT INTO checkout_events(checkout_id,status,detail) VALUES ($1,'HELD',$2)", [checkoutId, booking.queueRequested ? 'Queue request held for the demo checkout window; status is assigned after payment.' : 'Seat held for the demo checkout window.']);
       await client.query('COMMIT');
-      res.status(201).json({id: inserted.rows[0].id, status: inserted.rows[0].status, expiresAt: new Date(inserted.rows[0].expires_at).toISOString()});
+      res.status(201).json({id: inserted.rows[0].id, status: inserted.rows[0].status, expiresAt: new Date(inserted.rows[0].expires_at).toISOString(), seats: booking.seats});
     } catch (error) {
       try { await client.query('ROLLBACK'); } catch {}
       throw error;
@@ -557,7 +535,7 @@ export function createApi(pool, {checkoutHoldSeconds = 300} = {}) {
       }
       if (checkout.status !== 'HELD') throw new ApiError(409, 'A payment is already being processed for this checkout.');
       await client.query("UPDATE checkout_sessions SET status='CANCELLED',updated_at=now() WHERE id=$1", [checkout.id]);
-      await client.query("INSERT INTO checkout_events(checkout_id,status,detail) VALUES ($1,'CANCELLED','Traveller returned to seat selection.')", [checkout.id]);
+      await client.query("INSERT INTO checkout_events(checkout_id,status,detail) VALUES ($1,'CANCELLED','Traveller returned to passenger details.')", [checkout.id]);
       await client.query('DELETE FROM seat_holds WHERE checkout_id=$1', [checkout.id]);
       const booking = checkout.request_payload;
       if (booking?.seats?.length) await resequenceQueue(client, booking.train.id, booking.route.originDate, booking.travelClass);
@@ -593,7 +571,7 @@ export function createApi(pool, {checkoutHoldSeconds = 300} = {}) {
         const expiredBooking = checkout.request_payload;
         if (expiredBooking?.seats?.length) await resequenceQueue(client, expiredBooking.train.id, expiredBooking.route.originDate, expiredBooking.travelClass);
         await client.query('COMMIT');
-        return res.status(409).json({error: 'That seat hold expired. Return to seat selection and start checkout again.'});
+        return res.status(409).json({error: 'That automatic seat hold expired. Refresh availability and start checkout again.'});
       }
       const booking = checkout.request_payload;
       if (!booking.queueRequested) {

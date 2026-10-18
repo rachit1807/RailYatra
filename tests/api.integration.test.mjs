@@ -55,39 +55,47 @@ test('PostgreSQL auth, seat holds, payment lifecycle and concurrent booking safe
     const train = TRAINS[0];
     const date = addDays(today(), 24);
     const firstRoute = routeFor(train, train.stops[0], train.stops[1], date);
-    const makeDraft = (from, to, seat) => ({
+    const makeDraft = (from, to) => ({
       trainId: train.id, date, from, to, cls: '3A', quota: 'GENERAL',
       passengers: [{name: 'Test Traveller', age: 30, gender: 'Other'}],
-      seats: [seat], boarding: from,
+      boarding: from,
     });
     const openCheckout = (account, draft) => request('/checkouts', {
       method: 'POST', cookie: account.cookie, body: draft, idempotencyKey: randomUUID(),
     });
 
-    const competing = await Promise.all([
-      openCheckout(first, makeDraft(firstRoute.from, firstRoute.to, 1)),
-      openCheckout(second, makeDraft(firstRoute.from, firstRoute.to, 1)),
-    ]);
-    assert.deepEqual(competing.map(response => response.status).sort(), [201, 409]);
-    const winnerIndex = competing.findIndex(response => response.status === 201);
-    const winnerAccount = winnerIndex === 0 ? first : second;
-    const held = await competing[winnerIndex].json();
-    assert.equal(held.status, 'HELD');
+    const manualSeatRequest = await openCheckout(first, {...makeDraft(firstRoute.from, firstRoute.to), seats: [1]});
+    assert.equal(manualSeatRequest.status, 400, 'the booking API does not accept passenger-selected seat numbers');
 
-    const confirmed = await request(`/checkouts/${held.id}/payment`, {
-      method: 'POST', cookie: winnerAccount.cookie, body: {outcome: 'SUCCESS'},
+    const competing = await Promise.all([
+      openCheckout(first, makeDraft(firstRoute.from, firstRoute.to)),
+      openCheckout(second, makeDraft(firstRoute.from, firstRoute.to)),
+    ]);
+    assert.deepEqual(competing.map(response => response.status), [201, 201]);
+    const held = await Promise.all(competing.map(response => response.json()));
+    assert.deepEqual(held.map(checkout => checkout.seats.length), [1, 1], 'the server automatically assigns and holds a seat for each booking');
+    assert.notEqual(held[0].seats[0], held[1].seats[0], 'simultaneous users never receive the same seat');
+    const firstTicketResponse = await request(`/checkouts/${held[0].id}/payment`, {
+      method: 'POST', cookie: first.cookie, body: {outcome: 'SUCCESS'},
     });
-    assert.equal(confirmed.status, 201);
-    const ticket = await confirmed.json();
+    const secondTicketResponse = await request(`/checkouts/${held[1].id}/payment`, {
+      method: 'POST', cookie: second.cookie, body: {outcome: 'SUCCESS'},
+    });
+    assert.equal(firstTicketResponse.status, 201);
+    assert.equal(secondTicketResponse.status, 201);
+    const ticket = await firstTicketResponse.json();
+    const secondTicket = await secondTicketResponse.json();
     assert.equal(ticket.status, 'CONFIRMED');
     assert.equal(ticket.paymentStatus, 'SIMULATED_SUCCESS');
-    const retry = await request(`/checkouts/${held.id}/payment`, {
-      method: 'POST', cookie: winnerAccount.cookie, body: {outcome: 'SUCCESS'},
+    assert.deepEqual(ticket.seats, held[0].seats, 'the ticket reflects its automatic seat assignment');
+    assert.notEqual(ticket.seats[0], secondTicket.seats[0]);
+    const retry = await request(`/checkouts/${held[0].id}/payment`, {
+      method: 'POST', cookie: first.cookie, body: {outcome: 'SUCCESS'},
     });
     assert.equal((await retry.json()).pnr, ticket.pnr, 'retrying a completed payment must return the original booking');
 
     const adjacentRoute = routeFor(train, train.stops[1], train.stops[2], date);
-    const adjacent = await openCheckout(second, makeDraft(adjacentRoute.from, adjacentRoute.to, 1));
+    const adjacent = await openCheckout(second, makeDraft(adjacentRoute.from, adjacentRoute.to));
     assert.equal(adjacent.status, 201, 'the same seat can serve adjacent, non-overlapping legs');
     const adjacentHold = await adjacent.json();
     const adjacentBooking = await request(`/checkouts/${adjacentHold.id}/payment`, {
@@ -100,9 +108,10 @@ test('PostgreSQL auth, seat holds, payment lifecycle and concurrent booking safe
     const refundLedger = await request('/transactions', {cookie: second.cookie});
     assert((await refundLedger.json()).some(item => item.pnr === adjacentTicket.pnr && item.kind === 'REFUND' && item.status === 'REFUNDED'));
 
-    const failedCheckout = await openCheckout(second, makeDraft(firstRoute.from, firstRoute.to, 2));
+    const failedCheckout = await openCheckout(second, makeDraft(firstRoute.from, firstRoute.to));
     assert.equal(failedCheckout.status, 201);
     const failedHold = await failedCheckout.json();
+    assert.equal(failedHold.seats.length, 1);
     const failedPayment = await request(`/checkouts/${failedHold.id}/payment`, {
       method: 'POST', cookie: second.cookie, body: {outcome: 'FAILURE'},
     });
@@ -110,9 +119,9 @@ test('PostgreSQL auth, seat holds, payment lifecycle and concurrent booking safe
     const availability = await request(`/availability?from=${firstRoute.from}&to=${firstRoute.to}&date=${date}`);
     assert.equal(availability.status, 200);
     const inventory = await availability.json();
-    assert(inventory[train.id].classes['3A'].includes(2), 'failed payment releases its temporary hold');
+    assert(inventory[train.id].classes['3A'].includes(failedHold.seats[0]), 'failed payment releases its automatically assigned temporary hold');
 
-    const expiryCheckout = await openCheckout(second, makeDraft(firstRoute.from, firstRoute.to, 3));
+    const expiryCheckout = await openCheckout(second, makeDraft(firstRoute.from, firstRoute.to));
     assert.equal(expiryCheckout.status, 201);
     const expiryHold = await expiryCheckout.json();
     await new Promise(resolve => setTimeout(resolve, 10_100));
@@ -122,20 +131,38 @@ test('PostgreSQL auth, seat holds, payment lifecycle and concurrent booking safe
     assert.equal(expiredPayment.status, 409, 'expired holds cannot be paid or confirmed');
 
     const confirmedPnrs = [];
-    for (let seat = 2; seat <= 24; seat++) {
-      const seatCheckout = await openCheckout(first, makeDraft(firstRoute.from, firstRoute.to, seat));
+    for (let booking = 0; booking < 22; booking++) {
+      const seatCheckout = await openCheckout(first, makeDraft(firstRoute.from, firstRoute.to));
       assert.equal(seatCheckout.status, 201);
       const seatHold = await seatCheckout.json();
       const seatBooking = await request(`/checkouts/${seatHold.id}/payment`, {
         method: 'POST', cookie: first.cookie, body: {outcome: 'SUCCESS'},
       });
       assert.equal(seatBooking.status, 201);
-      confirmedPnrs.push((await seatBooking.json()).pnr);
+      const confirmedTicket = await seatBooking.json();
+      assert.equal(confirmedTicket.seats.length, 1);
+      confirmedPnrs.push(confirmedTicket.pnr);
     }
+
+    const freeOneSeat = await request(`/bookings/${confirmedPnrs[0]}/cancel`, {method: 'POST', cookie: first.cookie});
+    assert.equal(freeOneSeat.status, 200);
+    const lastSeatRace = await Promise.all([
+      openCheckout(first, makeDraft(firstRoute.from, firstRoute.to)),
+      openCheckout(second, makeDraft(firstRoute.from, firstRoute.to)),
+    ]);
+    assert.deepEqual(lastSeatRace.map(response => response.status).sort(), [201, 409], 'only one user receives the final available seat');
+    const lastSeatWinnerIndex = lastSeatRace.findIndex(response => response.status === 201);
+    const lastSeatAccount = lastSeatWinnerIndex === 0 ? first : second;
+    const lastSeatHold = await lastSeatRace[lastSeatWinnerIndex].json();
+    assert.equal(lastSeatHold.seats.length, 1);
+    const lastSeatBooking = await request(`/checkouts/${lastSeatHold.id}/payment`, {
+      method: 'POST', cookie: lastSeatAccount.cookie, body: {outcome: 'SUCCESS'},
+    });
+    assert.equal(lastSeatBooking.status, 201);
 
     const queuedPnrs = [];
     for (let position = 1; position <= 4; position++) {
-      const queueDraft = {...makeDraft(firstRoute.from, firstRoute.to, 1), seats: [], queueRequested: true};
+      const queueDraft = {...makeDraft(firstRoute.from, firstRoute.to), queueRequested: true};
       const queueCheckout = await openCheckout(second, queueDraft);
       assert.equal(queueCheckout.status, 201);
       const queueHold = await queueCheckout.json();
@@ -153,7 +180,7 @@ test('PostgreSQL auth, seat holds, payment lifecycle and concurrent booking safe
     assert.equal(soldOut[train.id].classes['3A'].length, 0);
     assert.deepEqual(soldOut[train.id].queues['3A'], {racCount: 3, waitlistCount: 1});
 
-    const freedSeat = await request(`/bookings/${confirmedPnrs[0]}/cancel`, {method: 'POST', cookie: first.cookie});
+    const freedSeat = await request(`/bookings/${confirmedPnrs[1]}/cancel`, {method: 'POST', cookie: first.cookie});
     assert.equal(freedSeat.status, 200);
     const hiddenQueue = await request(`/pnr/${queuedPnrs[0]}`, {cookie: first.cookie});
     assert.equal(hiddenQueue.status, 404, 'PNR lookups remain scoped to the account');
