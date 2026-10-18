@@ -17,7 +17,7 @@ A portfolio project for exploring the railway booking experience: accounts, rout
 
 </div>
 
-> **Demo only.** RailYatra is an independent learning project, not affiliated with IRCTC. It does not connect to live railway systems. Train data, tracking and payments are simulated; tickets are not valid for travel.
+> **Demo only.** RailYatra is an independent learning project, not affiliated with IRCTC. It does not connect to live railway systems. Train numbers and official listing labels are cross-checked against an official enquiry snapshot; route stops and timings come from a public timetable reference snapshot and may be out of date. Seat availability, tracking, fares and payments are simulated; tickets are not valid for travel.
 
 ## Live preview
 
@@ -57,7 +57,7 @@ The diagrams below document the deployed architecture and the exact sample datas
 ## What you can try
 
 - Create an account or use the in-app demo account; sign in and out.
-- Search across **155 sample stations and cities in every region of India**, with **94 directional demo train services** across North, South, East, West and Northeast corridors. Shahjahanpur Junction (**SPN**) and Hardoi (**HRI**) are included.
+- Search across **155 sample stations and cities in every region of India**, with **220 one-way train services** across North, South, East, West and Northeast corridors. Train numbers are checked against the official train enquiry listing; the service name and official listing label are shown together. Shahjahanpur Junction (**SPN**) and Hardoi (**HRI**) are included.
 - Find a direct train or a timed **one-change connection** through a shared station. Connected journeys are booked as two separate demo reservations, payments and PNRs; the app offers the next leg after the first ticket is issued.
 - See changing demo inventory labels such as **AVL 1**, **RAC 3** and **WL 2** for each class. Starting availability is generated from stable sample demand that varies by train, route, class and departure date; it is not live railway data and stays consistent on refresh. Your demo bookings and temporary holds reduce availability, while cancellation and failed or expired payment release seats. The system automatically allots berths; passengers never pick seat numbers. When a party cannot be confirmed or a queue already exists, request a simulated RAC position (up to three passenger positions) or a numbered waitlist spot. Cancellation can promote queued bookings.
 - View a demo PNR and download the ticket as an image or PDF.
@@ -66,9 +66,9 @@ The diagrams below document the deployed architecture and the exact sample datas
 
 ### Demo network at a glance
 
-![Chart showing 155 sample stations, 94 directional train services and 4 travel classes](docs/demo-dataset.svg)
+![Chart showing 155 sample stations, 220 reference train services and 4 travel classes](docs/demo-dataset.svg)
 
-These figures describe the curated sample data in the repository. They are not live route coverage, train availability or booking inventory. Train names, numbers, sample schedules, transfer timings and fares are illustrative and are not official railway timetable data. Station-code references can be checked against the [Indian Railways station directory](https://indianrailways.gov.in/station_name.pdf).
+These figures describe the curated dataset, not complete national route coverage or live booking inventory. Train numbers are cross-checked against the [official Indian Railways enquiry listing](https://www.indianrail.gov.in/enquiry/SCHEDULE/TrainSchedule.html?locale=en). Route stops, days and times are a reference snapshot from the [MIT-licensed Indian-Railway-Data project](https://github.com/prasenjit-27/Indian-Railway-Data); its timetable version date is not recorded, so verify any journey using official railway sources. See [train data sources and limits](docs/train-data-sources.md). Station-code references can be checked against the [Indian Railways station directory](https://indianrailways.gov.in/station_name.pdf).
 
 ## How it is put together
 

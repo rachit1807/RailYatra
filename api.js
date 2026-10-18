@@ -134,7 +134,7 @@ function bookingInput(body, userId) {
   const boardingIndex = train.stops.indexOf(boarding);
   if (boardingIndex < route.a || boardingIndex >= route.b) throw new ApiError(400, 'Choose a boarding station within the booked segment.');
   const departure = journeyTime(train, route, route.a);
-  const arrival = journeyTime(train, route, route.b);
+  const arrival = journeyTime(train, route, route.b, 'arrival');
   if (Date.parse(departure.iso) <= Date.now()) throw new ApiError(400, 'This sample train has already departed. Choose a later date.');
   return {
     userId,
