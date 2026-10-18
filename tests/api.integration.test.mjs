@@ -192,7 +192,7 @@ test('PostgreSQL auth, seat holds, payment lifecycle and concurrent booking safe
     assert.equal(rebalanced.find(booking => booking.pnr === queuedPnrs[3]).status, 'RAC');
     assert.equal(rebalanced.find(booking => booking.pnr === queuedPnrs[3]).queuePosition, 3);
 
-    const transactions = await request('/transactions', {cookie: winnerAccount.cookie});
+    const transactions = await request('/transactions', {cookie: first.cookie});
     assert.equal(transactions.status, 200);
     assert((await transactions.json()).some(item => item.pnr === ticket.pnr && item.status === 'SUCCEEDED'));
 
