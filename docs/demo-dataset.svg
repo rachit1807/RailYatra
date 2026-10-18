@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
   <title id="title">RailYatra sample network counts</title>
-  <desc id="desc">The demo includes 155 sample stations, 220 reference train services and 4 travel classes. These are curated demo counts, not live availability.</desc>
+  <desc id="desc">The demo includes 459 sample stations, 388 reference train services and 6 supported travel classes. These are curated demo counts, not live availability.</desc>
   <defs>
     <linearGradient id="barA" x1="0" x2="1">
       <stop stop-color="#2a6650"/>
@@ -30,19 +30,19 @@
     <rect x="300" y="307" width="670" height="48" rx="12"/>
     <rect x="300" y="409" width="670" height="48" rx="12"/>
   </g>
-  <rect x="300" y="205" width="472" height="48" rx="12" fill="url(#barA)"/>
-  <rect x="300" y="307" width="670" height="48" rx="12" fill="url(#barB)"/>
-  <rect x="300" y="409" width="48" height="48" rx="12" fill="url(#barC)"/>
+  <rect x="300" y="205" width="670" height="48" rx="12" fill="url(#barA)"/>
+  <rect x="300" y="307" width="566" height="48" rx="12" fill="url(#barB)"/>
+  <rect x="300" y="409" width="72" height="48" rx="12" fill="url(#barC)"/>
   <g fill="#183e32" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="700">
-    <text x="800" y="239">155</text>
-    <text x="1000" y="341">220</text>
-    <text x="360" y="443">4</text>
+    <text x="990" y="239">459</text>
+    <text x="900" y="341">388</text>
+    <text x="380" y="443">6</text>
   </g>
   <g fill="#7b887f" font-family="Inter,Arial,sans-serif" font-size="13">
     <text x="300" y="487">0</text>
-    <text x="945" y="487">155 curated stations</text>
+    <text x="945" y="487">459 curated stations</text>
   </g>
   <path d="M300 475h670" stroke="#c8c5bb" stroke-width="1"/>
   <rect x="64" y="505" width="1072" height="1" fill="#ded9cb"/>
-  <text x="64" y="535" fill="#69766d" font-family="Inter,Arial,sans-serif" font-size="14">Train IDs are cross-checked; route/timing snapshots and all availability, fares and payments are demo data.</text>
+  <text x="64" y="535" fill="#69766d" font-family="Inter,Arial,sans-serif" font-size="14">Train schedules are references; availability, fares, bookings and payments are simulated.</text>
 </svg>

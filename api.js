@@ -1,7 +1,7 @@
 import {createHash, randomBytes, randomInt, randomUUID, scrypt as scryptCallback, timingSafeEqual} from 'node:crypto';
 import {promisify} from 'node:util';
 import express from 'express';
-import {CLASSES, RAC_CAPACITY, STATIONS, TRAINS, addDays, fare, journeyTime, routeFor, simulatedUnavailableSeats, today} from './dist/engine.js';
+import {RAC_CAPACITY, STATIONS, TRAINS, addDays, classesFor, fare, journeyTime, routeFor, simulatedUnavailableSeats, today} from './dist/engine.js';
 
 const scrypt = promisify(scryptCallback);
 const SESSION_DAYS = 7;
@@ -108,7 +108,7 @@ function bookingInput(body, userId) {
   const date = body.date;
   if (!train || !validJourneyDate(date)) throw new ApiError(400, 'Choose a valid sample train and journey date.');
   if (!STATIONS[body.from] || !STATIONS[body.to]) throw new ApiError(400, 'Choose valid stations.');
-  if (!Object.hasOwn(CLASSES, body.cls)) throw new ApiError(400, 'Choose a valid travel class.');
+  if (!classesFor(train).includes(body.cls)) throw new ApiError(400, 'Choose a travel class offered by this train.');
   if (!['GENERAL', 'TATKAL'].includes(body.quota)) throw new ApiError(400, 'Choose a valid demo quota.');
   if (body.paymentId !== undefined && (typeof body.paymentId !== 'string' || body.paymentId.length < 8 || body.paymentId.length > 120)) {
     throw new ApiError(400, 'Payment reference is invalid. Restart checkout and try again.');
@@ -418,7 +418,7 @@ export function createApi(pool, {checkoutHoldSeconds = 300} = {}) {
     for (const {train, route} of routes) {
       const byClass = {};
       const queues = {};
-      for (const cls of Object.keys(CLASSES)) {
+      for (const cls of classesFor(train)) {
         const used = new Set(simulatedUnavailableSeats(train.id, route.originDate, cls, route.a, route.b));
         for (const booking of occupied.rows) {
           if (booking.train_id !== train.id || dateText(booking.origin_date) !== route.originDate || booking.travel_class !== cls) continue;
