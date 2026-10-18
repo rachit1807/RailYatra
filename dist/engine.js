@@ -1,8 +1,12 @@
-export const STATIONS={NDLS:'New Delhi',AGC:'Agra Cantt',GWL:'Gwalior',VGLJ:'Jhansi',BPL:'Bhopal',NGP:'Nagpur',HYB:'Hyderabad',SBC:'Bengaluru',MAS:'Chennai Central',BZA:'Vijayawada',VSKP:'Visakhapatnam',BBS:'Bhubaneswar',HWH:'Howrah',PNBE:'Patna',DDU:'Pt. Deen Dayal Upadhyaya',PRYJ:'Prayagraj',CNB:'Kanpur',LKO:'Lucknow',BSB:'Varanasi',GKP:'Gorakhpur',GHY:'Guwahati',NJP:'New Jalpaiguri',DBRG:'Dibrugarh',CSMT:'Mumbai CSMT',PUNE:'Pune',SUR:'Solapur',ADI:'Ahmedabad',JP:'Jaipur',JU:'Jodhpur',UDZ:'Udaipur',ASR:'Amritsar',CDG:'Chandigarh',JAT:'Jammu Tawi',TVC:'Thiruvananthapuram',ERS:'Ernakulam',CLT:'Kozhikode',MAQ:'Mangaluru',MAO:'Madgaon',RNC:'Ranchi',TATA:'Tatanagar',KOTA:'Kota'};
+const stationRows=[
+ ['NDLS','New Delhi, Delhi'],['DLI','Old Delhi, Delhi'],['AGC','Agra Cantt, Uttar Pradesh'],['GWL','Gwalior, Madhya Pradesh'],['VGLJ','Virangana Lakshmibai Jhansi, Uttar Pradesh'],['BPL','Bhopal, Madhya Pradesh'],['RKMP','Rani Kamlapati, Madhya Pradesh'],['ET','Itarsi, Madhya Pradesh'],['NGP','Nagpur, Maharashtra'],['HYB','Hyderabad, Telangana'],['SBC','KSR Bengaluru, Karnataka'],['YPR','Yesvantpur, Karnataka'],['MYS','Mysuru, Karnataka'],['MAS','Chennai Central, Tamil Nadu'],['BZA','Vijayawada, Andhra Pradesh'],['VSKP','Visakhapatnam, Andhra Pradesh'],['BBS','Bhubaneswar, Odisha'],['HWH','Howrah, West Bengal'],['PNBE','Patna Junction, Bihar'],['DDU','Pt. Deen Dayal Upadhyaya, Uttar Pradesh'],['PRYJ','Prayagraj, Uttar Pradesh'],['CNB','Kanpur Central, Uttar Pradesh'],['LKO','Lucknow, Uttar Pradesh'],['BSB','Varanasi, Uttar Pradesh'],['GKP','Gorakhpur, Uttar Pradesh'],['GHY','Guwahati, Assam'],['NJP','New Jalpaiguri, West Bengal'],['DBRG','Dibrugarh, Assam'],['CSMT','Mumbai CSMT, Maharashtra'],['PUNE','Pune, Maharashtra'],['SUR','Solapur, Maharashtra'],['ADI','Ahmedabad, Gujarat'],['JP','Jaipur, Rajasthan'],['JU','Jodhpur, Rajasthan'],['UDZ','Udaipur City, Rajasthan'],['ASR','Amritsar, Punjab'],['CDG','Chandigarh, Chandigarh'],['JAT','Jammu Tawi, Jammu and Kashmir'],['TVC','Thiruvananthapuram Central, Kerala'],['ERS','Ernakulam Junction, Kerala'],['CLT','Kozhikode, Kerala'],['MAQ','Mangaluru Central, Karnataka'],['MAO','Madgaon, Goa'],['RNC','Ranchi, Jharkhand'],['TATA','Tatanagar, Jharkhand'],['KOTA','Kota, Rajasthan'],
+ ['FBD','Faridabad, Haryana'],['GZB','Ghaziabad, Uttar Pradesh'],['MTC','Meerut City, Uttar Pradesh'],['ALJN','Aligarh Junction, Uttar Pradesh'],['KSJ','Kasganj, Uttar Pradesh'],['MB','Moradabad, Uttar Pradesh'],['BE','Bareilly, Uttar Pradesh'],['SPN','Shahjahanpur Junction, Uttar Pradesh'],['HRI','Hardoi, Uttar Pradesh'],['LJN','Lucknow Junction, Uttar Pradesh'],['RMR','Ramnagar, Uttarakhand'],['KGM','Kathgodam, Uttarakhand'],['UMB','Ambala Cantt, Haryana'],['LDH','Ludhiana, Punjab'],['JUC','Jalandhar City, Punjab'],['PTK','Pathankot, Punjab'],['UHP','Udhampur, Jammu and Kashmir'],['SVDK','Shri Mata Vaishno Devi Katra, Jammu and Kashmir'],['KLK','Kalka, Haryana'],['SML','Shimla, Himachal Pradesh'],['AWR','Alwar, Rajasthan'],['RE','Rewari, Haryana'],['AII','Ajmer, Rajasthan'],['BKN','Bikaner, Rajasthan'],['MTD','Merta Road, Rajasthan'],['RTM','Ratlam, Madhya Pradesh'],['UJN','Ujjain, Madhya Pradesh'],['INDB','Indore, Madhya Pradesh'],['BINA','Bina, Madhya Pradesh'],['JBP','Jabalpur, Madhya Pradesh'],['KTE','Katni, Madhya Pradesh'],['PNVL','Panvel, Maharashtra'],['BVI','Borivali, Maharashtra'],['BDTS','Mumbai Bandra Terminus, Maharashtra'],['KYN','Kalyan, Maharashtra'],['IGP','Igatpuri, Maharashtra'],['NAS','Nasik Road, Maharashtra'],['MMR','Manmad, Maharashtra'],['BSL','Bhusaval, Maharashtra'],['JL','Jalgaon, Maharashtra'],['DD','Daund, Maharashtra'],['ROHA','Roha, Maharashtra'],['RN','Ratnagiri, Maharashtra'],['THVM','Thivim, Goa'],['KAWR','Karwar, Karnataka'],['UD','Udupi, Karnataka'],['CAN','Kannur, Kerala'],['TCR','Thrissur, Kerala'],['ALLP','Alappuzha, Kerala'],['KTYM','Kottayam, Kerala'],['NCJ','Nagercoil Junction, Tamil Nadu'],['MDU','Madurai, Tamil Nadu'],['TPJ','Tiruchirappalli, Tamil Nadu'],['CBE','Coimbatore, Tamil Nadu'],['ED','Erode, Tamil Nadu'],['SA','Salem, Tamil Nadu'],['PGT','Palakkad, Kerala'],['AJJ','Arakkonam, Tamil Nadu'],['KPD','Katpadi, Tamil Nadu'],['JTJ','Jolarpettai, Tamil Nadu'],['KJM','Krishnarajapuram, Karnataka'],['KGI','Kengeri, Karnataka'],['UBL','Hubballi, Karnataka'],['BGM','Belagavi, Karnataka'],['HPT','Hospet, Karnataka'],['WADI','Wadi, Karnataka'],['KZJ','Kazipet, Telangana'],['RDM','Ramagundam, Telangana'],['BDCR','Bhadrachalam Road, Telangana'],['KCG','Kacheguda, Telangana'],['GTL','Guntakal, Andhra Pradesh'],['ADONI','Adoni, Andhra Pradesh'],['DMM','Dharmavaram, Andhra Pradesh'],['NLR','Nellore, Andhra Pradesh'],['GDR','Gudur, Andhra Pradesh'],['OGL','Ongole, Andhra Pradesh'],['RJY','Rajahmundry, Andhra Pradesh'],['SLO','Samalkot, Andhra Pradesh'],['VZM','Vizianagaram, Andhra Pradesh'],['PSA','Palasa, Andhra Pradesh'],['BAM','Brahmapur, Odisha'],['KUR','Khurda Road, Odisha'],['CTC','Cuttack, Odisha'],['BLS','Balasore, Odisha'],['KGP','Kharagpur, West Bengal'],['JSG','Jharsuguda, Odisha'],['ROU','Rourkela, Odisha'],['BSP','Bilaspur, Chhattisgarh'],['RIG','Raigarh, Chhattisgarh'],['BWN','Barddhaman, West Bengal'],['ASN','Asansol, West Bengal'],['DHN','Dhanbad, Jharkhand'],['GAYA','Gaya, Bihar'],['BXR','Buxar, Bihar'],['ARA','Ara, Bihar'],['DNR','Danapur, Bihar'],['MFP','Muzaffarpur, Bihar'],['DBG','Darbhanga, Bihar'],['CPR','Chhapra, Bihar'],['SEE','Sonpur, Bihar'],['KIR','Katihar, Bihar'],['MLDT','Malda Town, West Bengal'],['APDJ','Alipurduar, West Bengal'],['NGC','New Guwahati, Assam'],['NTSK','New Tinsukia, Assam'],['JTTN','Jorhat Town, Assam'],['SCL','Silchar, Assam'],['ST','Surat, Gujarat'],['BRC','Vadodara, Gujarat']
+];
+export const STATIONS=Object.fromEntries(stationRows);
 const routes=[
  ['12952','Capital Rajdhani','Premium',['NDLS','KOTA','ADI','CSMT'],[0,270,660,960],990,960],
  ['12310','Ganga Rajdhani','Premium',['NDLS','CNB','PRYJ','DDU','PNBE'],[0,270,420,540,780],1030,1000],
- ['12628','Dakshin Express','Express',['NDLS','AGC','GWL','VGLJ','BPL','NGP','HYB','SBC'],[0,150,240,340,550,850,1340,1840],1200,2200],
+ ['12628','Dakshin Express','Express',['NDLS','AGC','GWL','VGLJ','BPL','NGP','HYB','SBC','MAS'],[0,150,240,340,550,850,1340,1840,2140],1200,2550],
  ['12842','Coromandel Express','Express',['MAS','BZA','VSKP','BBS','HWH'],[0,360,780,1100,1530],420,1650],
  ['12002','Bhopal Shatabdi','Superfast',['NDLS','AGC','GWL','VGLJ','BPL'],[0,120,210,310,480],360,700],
  ['12424','Brahmaputra Rajdhani','Premium',['NDLS','CNB','PRYJ','PNBE','NJP','GHY','DBRG'],[0,280,450,760,1320,1740,2220],970,2700],
@@ -14,14 +18,89 @@ const routes=[
  ['15018','Purvanchal Express','Express',['GKP','LKO','CNB','PRYJ','BSB','PNBE','HWH'],[0,260,360,520,660,900,1350],660,1450],
  ['12810','Eastern Mail','Express',['HWH','TATA','RNC','NGP','CSMT'],[0,210,390,1000,1620],1170,1950],
  ['12702','Deccan Link','Express',['HYB','SUR','PUNE','CSMT'],[0,360,600,810],870,800],
- ['12608','Southern Shatabdi','Superfast',['SBC','MAS'],[0,300],360,350]
+ ['12608','Southern Shatabdi','Superfast',['SBC','MAS'],[0,300],360,350],
+ ['70001','Rohilkhand Corridor','Express',['NDLS','FBD','GZB','MTC','MB','BE','SPN','HRI','LKO'],270,430,92],
+ ['70011','Terai Link','Express',['DLI','GZB','ALJN','KSJ','BE','MB','RMR','KGM'],330,390,88],
+ ['70021','Awadh Purvanchal Link','Express',['LKO','LJN','HRI','SPN','BE','MB','GKP','CPR','SEE','DNR','PNBE'],360,760,98],
+ ['70031','Ganga Plains Express','Express',['LKO','CNB','PRYJ','BSB','DDU','BXR','ARA','DNR','PNBE'],300,610,90],
+ ['70041','Mithila Express','Express',['NDLS','CNB','PRYJ','DDU','GAYA','PNBE','MFP','DBG'],390,1050,104],
+ ['70051','Aravalli Desert Link','Superfast',['NDLS','RE','AWR','JP','AII','MTD','UDZ','JU','BKN'],300,930,96],
+ ['70061','Himalayan Valley Link','Express',['NDLS','UMB','CDG','KLK','SML'],360,520,88],
+ ['70071','Punjab Jammu Mail','Express',['NDLS','UMB','LDH','JUC','ASR','PTK','JAT','UHP','SVDK'],330,760,92],
+ ['70081','Madhya Bharat Express','Express',['CSMT','BDTS','BVI','KYN','IGP','NAS','MMR','BSL','JL','BINA','BPL','RKMP','ET','JBP'],330,1120,98],
+ ['70091','Konkan Coast Express','Express',['CSMT','PNVL','ROHA','RN','MAO','THVM','KAWR','UD','MAQ','CAN','CLT'],390,1130,96],
+ ['70101','Deccan Plateau Link','Express',['CSMT','PUNE','DD','SUR','WADI','HYB'],420,790,102],
+ ['70111','Karnataka Hampi Express','Express',['HYB','KZJ','RDM','BDCR','KCG','GTL','ADONI','DMM','SBC'],360,720,94],
+ ['70121','Mysuru Hubballi Express','Express',['SBC','YPR','KGI','MYS','HPT','UBL','BGM'],300,620,94],
+ ['70131','Vellore Bengaluru Link','Express',['SBC','KJM','JTJ','KPD','AJJ','MAS'],360,360,75],
+ ['70141','Andhra Coast Express','Superfast',['MAS','AJJ','KPD','NLR','GDR','OGL','BZA','RJY','SLO','VSKP','VZM'],300,800,92],
+ ['70151','Tamil Kerala Express','Express',['MAS','TPJ','MDU','NCJ','TVC','ALLP','ERS'],330,850,94],
+ ['70161','Kongu Intercity','Express',['ERS','KTYM','TCR','PGT','CBE','ED','SA','SBC'],390,690,88],
+ ['70171','Odisha Coast Mail','Express',['VSKP','VZM','PSA','BAM','KUR','BBS','CTC','BLS','KGP','HWH'],330,900,91],
+ ['70181','Chota Nagpur Link','Express',['HWH','BWN','ASN','DHN','TATA','RNC','ROU','JSG','BSP','RIG'],360,900,96],
+ ['70191','North East Frontier Express','Express',['HWH','MLDT','KIR','NJP','APDJ','NGC','GHY'],390,920,98],
+ ['70201','Brahmaputra Valley Link','Express',['GHY','NGC','JTTN','NTSK','DBRG'],450,520,94],
+ ['70211','Gujarat Central Express','Superfast',['CSMT','KYN','MMR','BSL','RTM','UJN','ADI','BRC','ST'],300,900,94],
+ ['70221','Mahakoshal Junction Express','Express',['BPL','BINA','KTE','JBP','PRYJ','CNB','LKO'],390,820,96],
+ ['70231','Malwa Western Link','Express',['ADI','BRC','ST','RTM','UJN','INDB','BPL'],360,620,88],
+ ['70241','Coastal Karnataka Shuttle','Express',['MAQ','UD','KAWR','MAO','THVM'],300,390,88],
+ ['70251','Barak Valley Connection','Express',['HWH','MLDT','NJP','GHY','SCL'],420,980,102],
+ ['70261','Brahmaputra Deccan Link','Express',['GHY','NJP','HWH','KGP','TATA','ROU','JSG','BPL','BINA','CSMT','PUNE'],540,1900,100],
+ ['70271','North South Corridor Express','Express',['NDLS','AGC','GWL','VGLJ','BPL','NGP','HYB','SBC','MAS'],780,2550,100],
+ ['71001','Demo Vande Bharat · Delhi–Varanasi','Premium',['NDLS','CNB','PRYJ','DDU','BSB'],360,780,78],
+ ['71011','Demo Vande Bharat · Chennai–Vijayawada','Premium',['MAS','GDR','NLR','OGL','BZA'],390,450,82],
+ ['71021','Demo Duronto · Delhi–Mumbai','Premium',['NDLS','KOTA','BPL','BINA','CSMT'],300,1350,92],
+ ['71031','Demo Garib Rath · Howrah–Bhubaneswar','Superfast',['HWH','KGP','BLS','CTC','BBS'],420,450,76]
 ];
-export const TRAINS=routes.flatMap(([id,name,type,stops,offsets,start,km])=>[{id,name,type,stops,offsets,start,km},{id:String(+id+101),name:name+' Return',type,stops:[...stops].reverse(),offsets:[...offsets].reverse().map(x=>offsets.at(-1)-x),start:480,km}]);
+function buildRoute([id,name,type,stops,offsetsOrStart,startOrKm,kmOrPace]){
+ if(Array.isArray(offsetsOrStart))return{id,name,type,stops,offsets:offsetsOrStart,start:startOrKm,km:kmOrPace};
+ const start=offsetsOrStart,km=startOrKm,pace=kmOrPace??95;
+ const offsets=stops.map((_,index)=>Math.round((index*pace+Math.max(0,index-1)*9)/5)*5);
+ return{id,name,type,stops,offsets,start,km};
+}
+const serviceRoutes=routes.map(buildRoute);
+export const TRAINS=serviceRoutes.flatMap(({id,name,type,stops,offsets,start,km})=>[{id,name,type,stops,offsets,start,km},{id:String(+id+101),name:name+' Return',type,stops:[...stops].reverse(),offsets:[...offsets].reverse().map(x=>offsets.at(-1)-x),start:Number(id)>=70000?240+(Number(id)%13)*50:480,km}]);
 export const CLASSES={'SL':{name:'Sleeper',rate:.72,coach:'S1'},'3A':{name:'AC 3 Tier',rate:1.65,coach:'B1'},'2A':{name:'AC 2 Tier',rate:2.35,coach:'A1'},'1A':{name:'AC First',rate:3.8,coach:'H1'}};
 export const RAC_CAPACITY=3;
 export const today=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 export const addDays=(d,n)=>new Date(Date.parse(d+'T00:00:00Z')+n*86400000).toISOString().slice(0,10);
 export function routeFor(t,from,to,date){const a=t.stops.indexOf(from),b=t.stops.indexOf(to);if(a<0||b<=a)return null;const shift=Math.floor((t.start+t.offsets[a])/1440);return{trainId:t.id,a,b,from,to,date,originDate:addDays(date,-shift),duration:t.offsets[b]-t.offsets[a]};}
+const indiaDate=iso=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(iso));
+export function findConnections(from,to,date,{maxResults=8}={}){
+ const journeys=[];
+ for(const first of TRAINS){
+  const sharedStops=first.stops;
+  for(const hub of sharedStops){
+   const firstRoute=routeFor(first,from,hub,date);
+   if(!firstRoute)continue;
+   const firstDeparture=journeyTime(first,firstRoute,firstRoute.a),firstArrival=journeyTime(first,firstRoute,firstRoute.b);
+   for(const second of TRAINS){
+    if(second.id===first.id||!second.stops.includes(hub))continue;
+    let secondRoute=routeFor(second,hub,to,indiaDate(firstArrival.iso));
+    let secondDeparture=secondRoute&&journeyTime(second,secondRoute,secondRoute.a);
+    let transferMinutes=secondDeparture?(Date.parse(secondDeparture.iso)-Date.parse(firstArrival.iso))/60000:-1;
+    if(transferMinutes<35||transferMinutes>1080){
+     secondRoute=routeFor(second,hub,to,addDays(indiaDate(firstArrival.iso),1));
+     secondDeparture=secondRoute&&journeyTime(second,secondRoute,secondRoute.a);
+     transferMinutes=secondDeparture?(Date.parse(secondDeparture.iso)-Date.parse(firstArrival.iso))/60000:-1;
+    }
+    if(!secondRoute||transferMinutes<35||transferMinutes>1080)continue;
+    const secondArrival=journeyTime(second,secondRoute,secondRoute.b);
+    const duration=(Date.parse(secondArrival.iso)-Date.parse(firstDeparture.iso))/60000;
+    if(duration<=0)continue;
+    journeys.push({legs:[{train:first,route:firstRoute,departure:firstDeparture,arrival:firstArrival},{train:second,route:secondRoute,departure:secondDeparture,arrival:secondArrival}],hub,transferMinutes,duration});
+   }
+  }
+ }
+ const unique=new Map();
+ journeys.sort((a,b)=>a.duration-b.duration||a.transferMinutes-b.transferMinutes);
+ for(const journey of journeys){
+  const key=journey.legs.map(leg=>`${leg.train.id}:${leg.route.from}-${leg.route.to}:${leg.route.originDate}`).join('|');
+  if(!unique.has(key))unique.set(key,journey);
+  if(unique.size>=maxResults)break;
+ }
+ return [...unique.values()];
+}
 export const overlaps=(a,b)=>a.a<b.b&&b.a<a.b;
 export const berth=n=>['Lower','Middle','Upper','Lower','Middle','Upper','Side lower','Side upper'][(n-1)%8];
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));

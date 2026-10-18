@@ -57,7 +57,8 @@ The diagrams below document the deployed architecture and the exact sample datas
 ## What you can try
 
 - Create an account or use the in-app demo account; sign in and out.
-- Search sample routes across **41 major Indian stations**, compare **30 directional sample services**, and choose from **Sleeper, 3A, 2A and 1A**.
+- Search across **155 sample stations and cities in every region of India**, with **94 directional demo train services** across North, South, East, West and Northeast corridors. Shahjahanpur Junction (**SPN**) and Hardoi (**HRI**) are included.
+- Find a direct train or a timed **one-change connection** through a shared station. Connected journeys are booked as two separate demo reservations, payments and PNRs; the app offers the next leg after the first ticket is issued.
 - See changing demo inventory labels such as **AVL 1**, **RAC 3** and **WL 2** for each class. Starting availability is generated from stable sample demand that varies by train, route, class and departure date; it is not live railway data and stays consistent on refresh. Your demo bookings and temporary holds reduce availability, while cancellation and failed or expired payment release seats. The system automatically allots berths; passengers never pick seat numbers. When a party cannot be confirmed or a queue already exists, request a simulated RAC position (up to three passenger positions) or a numbered waitlist spot. Cancellation can promote queued bookings.
 - View a demo PNR and download the ticket as an image or PDF.
 - Check upcoming, past and cancelled journeys; inspect recent demo transactions and request a simulated cancellation/refund.
@@ -65,9 +66,9 @@ The diagrams below document the deployed architecture and the exact sample datas
 
 ### Demo network at a glance
 
-![Chart showing 41 sample stations, 30 directional train services and 4 travel classes](docs/demo-dataset.svg)
+![Chart showing 155 sample stations, 94 directional train services and 4 travel classes](docs/demo-dataset.svg)
 
-These figures describe the curated sample data in the repository. They are not live route coverage, train availability or booking inventory.
+These figures describe the curated sample data in the repository. They are not live route coverage, train availability or booking inventory. Train names, numbers, sample schedules, transfer timings and fares are illustrative and are not official railway timetable data. Station-code references can be checked against the [Indian Railways station directory](https://indianrailways.gov.in/station_name.pdf).
 
 ## How it is put together
 
