@@ -1,7 +1,7 @@
 import {createHash, randomBytes, randomInt, randomUUID, scrypt as scryptCallback, timingSafeEqual} from 'node:crypto';
 import {promisify} from 'node:util';
 import express from 'express';
-import {RAC_CAPACITY, STATIONS, TRAINS, addDays, classesFor, fare, journeyTime, routeFor, simulatedUnavailableSeats, today} from './dist/engine.js';
+import {RAC_CAPACITY, STATIONS, TRAINS, addDays, classesFor, fare, journeyTime, routeFor, routeForSearch, simulatedUnavailableSeats, today} from './dist/engine.js';
 
 const scrypt = promisify(scryptCallback);
 const SESSION_DAYS = 7;
@@ -384,7 +384,7 @@ export function createApi(pool, {checkoutHoldSeconds = 300} = {}) {
   router.get('/availability', wrap(async (req, res) => {
     const {from, to, date} = req.query;
     if (!STATIONS[from] || !STATIONS[to] || !validJourneyDate(date)) throw new ApiError(400, 'Choose valid stations and a journey date.');
-    const routes = TRAINS.map(train => ({train, route: routeFor(train, from, to, date)})).filter(item => item.route);
+    const routes = TRAINS.map(train => ({train, route: routeForSearch(train, from, to, date)})).filter(item => item.route);
     if (!routes.length) return res.json({});
     const values = [];
     const rows = routes.map(({train, route}) => {
